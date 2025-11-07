@@ -1,0 +1,10 @@
+[project]
+name = "agentdock-adapters"
+version = "0.1.0"
+description = "Adapter interfaces for LangGraph/LangChain"
+requires-python = ">=3.12"
+dependencies = []
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

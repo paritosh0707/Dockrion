@@ -1,0 +1,10 @@
+[project]
+name = "agentdock-schema"
+version = "0.1.0"
+description = "Dockfile v1 models and validators"
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2.5", "pyyaml>=6.0"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

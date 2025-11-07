@@ -1,0 +1,10 @@
+[project]
+name = "agentdock-sdk"
+version = "0.1.0"
+description = "AgentDock SDK (local v1)"
+requires-python = ">=3.12"
+dependencies = ["pyyaml>=6.0", "requests>=2.31", "agentdock-schema>=0.1.0"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

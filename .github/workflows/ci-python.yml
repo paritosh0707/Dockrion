@@ -1,0 +1,11 @@
+name: CI Python
+on: [push, pull_request]
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e packages/common-py -e packages/schema
+      - run: python -c "import agentdock_schema.dockfile_v1 as m; print('schema ok')"
