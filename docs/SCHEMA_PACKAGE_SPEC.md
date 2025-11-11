@@ -112,23 +112,18 @@ Each error includes:
 
 ---
 
-### 4. YAML Parser (`parser.py`)
+### 4. Serialization Utilities (`serialization.py`)
 
-End-to-end pipeline from file to validated object:
+Convert between DockSpec objects and dictionaries/YAML:
 
-**Pipeline:**
-1. Load YAML file
-2. Process `!include` directives (modular configs)
-3. Expand `${VAR}` environment variables
-4. Fast-fail JSON Schema validation
-5. Detailed Pydantic validation
+**Functions:**
+- `to_dict(spec: DockSpec) → dict` - Convert to plain dict
+- `to_yaml_string(spec: DockSpec) → str` - Serialize to YAML string (for storage)
+- `from_dict(data: dict) → DockSpec` - Convenience wrapper around `model_validate()`
 
-**Key functions:**
-- `load_dockfile(path) → DockSpec` - Complete validation
-- `validate_dockfile(path) → Result` - Check only (for CLI)
-- `to_yaml(spec) → str` - Serialize back (for storage)
+**Why in schema:** These are schema-level operations (model ↔ dict conversion)
 
-**Why in schema:** Builder, Controller, and CLI all need to parse. Must be centralized.
+**Why NOT file I/O:** Reading/writing files is SDK/CLI responsibility, not schema
 
 ---
 
@@ -155,15 +150,19 @@ Export Pydantic models as JSON Schema v7:
 [project]
 dependencies = [
     "pydantic>=2.5",      # Core validation framework
-    "pyyaml>=6.0",        # YAML parsing
-    "jsonschema>=4.0"     # JSON Schema generation
+]
+
+[project.optional-dependencies]
+dev = [
+    "pyyaml>=6.0",        # For serialization utilities (to_yaml_string)
 ]
 ```
 
-**Why these only:**
+**Why minimal dependencies:**
 - Schema must have ZERO dependencies on other AgentDock packages
 - Keeps it as the foundational layer
 - Allows other packages to import schema without circular dependencies
+- PyYAML is only for serialization (optional), not required for validation
 
 ---
 
@@ -225,8 +224,8 @@ Schema is heavily consumed by all other packages:
 
 | Consumer Package | What It Imports | Why |
 |-----------------|-----------------|-----|
-| **CLI** | `DockSpec`, `load_dockfile()`, `validate_dockfile()` | Parse and validate before deployment |
-| **SDK** | `DockSpec`, `load_dockfile()`, errors | Core deployment validation |
+| **CLI** | `DockSpec`, errors | Type hints and validation |
+| **SDK** | `DockSpec`, `to_yaml_string()`, errors | Loads files, uses schema for validation |
 | **Common** | `DockSpec` (type hints) | Validation functions type-hint DockSpec |
 | **Adapters** | `AgentConfig` | Get framework and entrypoint info |
 | **Policy-Engine** | `Policies` model (future) | Load policy config |
@@ -247,35 +246,48 @@ Schema is heavily consumed by all other packages:
                │
                ▼
 ┌─────────────────────────────────────────┐
-│ SDK loads and parses                     │
-│ packages/sdk/validate.py                │
-│   spec = load_dockfile(path)  ← SCHEMA  │
+│ SDK handles file I/O                     │
+│ packages/sdk/client.py                  │
+│   data = yaml.safe_load(open(path))     │
+│   # SDK reads file and parses YAML      │
 └──────────────┬──────────────────────────┘
-               │
+               │ (passes dict)
                ▼
 ┌─────────────────────────────────────────┐
 │ Schema validates structure               │
 │ packages/schema/dockfile_v1.py          │
-│   DockSpec.model_validate(data)         │
+│   spec = DockSpec.model_validate(data)  │
+│   # Schema receives dict, validates it  │
 └──────────────┬──────────────────────────┘
                │
                ▼
 ┌─────────────────────────────────────────┐
-│ Schema custom validators                 │
-│ packages/schema/validation.py           │
+│ Schema custom validators (if needed)     │
+│ packages/common/validation.py           │
 │   validate_entrypoint()                  │
 │   validate_agent_name()                  │
 └─────────────────────────────────────────┘
 ```
 
+**Key: Schema never touches files. SDK does I/O, Schema does validation.**
+
 **From Runtime Generation (Journey 1, Step 4):**
 
 ```
 ┌─────────────────────────────────────────┐
+│ SDK loads Dockfile                       │
+│ packages/sdk/client.py                  │
+│   spec = load_dockspec(path)  ← SDK     │
+│     ↳ Reads file, parses YAML           │
+│     ↳ Calls DockSpec.model_validate()   │
+└──────────────┬──────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────┐
 │ SDK generates runtime                    │
 │ packages/sdk/deploy.py                  │
-│   spec = load_dockfile()  ← SCHEMA      │
 │   code = render_template(spec)          │
+│   # Uses validated spec object          │
 └──────────────┬──────────────────────────┘
                │
                ▼
@@ -306,6 +318,9 @@ Schema is heavily consumed by all other packages:
 
 | What | Where It Belongs | Why |
 |------|-----------------|-----|
+| **File I/O** | **SDK/CLI** | **Schema validates dicts, SDK reads files** |
+| **YAML parsing** | **SDK/CLI** | **Schema receives parsed data, doesn't parse files** |
+| **Environment variable expansion** | **SDK** | **I/O operation, not validation** |
 | Docker builds | Builder Service | Schema validates, services execute |
 | Database queries | Controller | Schema defines data, Controller stores it |
 | API endpoints | Runtime Service | Schema defines structure, Runtime serves it |
@@ -314,6 +329,8 @@ Schema is heavily consumed by all other packages:
 | Business constants | Common package | Schema defines structure, common defines values |
 
 **Principle:** Schema is pure data + validation. No side effects, no I/O, no business logic.
+
+**Key Rule:** If it touches the file system, network, or environment, it's NOT schema's job.
 
 ---
 
@@ -356,15 +373,17 @@ Deferred to later when corresponding services are built:
 **Deliverable:** 6 core Pydantic models - `DockSpec`, `AgentConfig`, `IOSchema`, `Arguments`, `ExposeConfig`, `Metadata`
 **Blocker:** Nothing else can start without this
 **Extensibility:** Use `model_config = ConfigDict(extra="allow")` to accept unknown fields for future expansion
+**Note:** Models only do validation, NO file I/O
 
 ### Phase 2: Validation + Errors (2 days)
 **Deliverable:** Custom validators (entrypoint, I/O schema) and error hierarchy (4001-4004 codes for MVP)
 **Value:** Clear, actionable error messages
 **Note:** Error codes 4005-4008 reserved for future (auth, policy, telemetry)
 
-### Phase 3: YAML Parser (2 days)
-**Deliverable:** Load → Expand → Validate pipeline
-**Value:** Users can actually use the schema package
+### Phase 3: Serialization Utilities (1 day)
+**Deliverable:** `to_dict()`, `to_yaml_string()`, `from_dict()` helper functions
+**Value:** Easy conversion between formats (no file I/O)
+**Note:** File reading/writing stays in SDK/CLI
 
 ### Phase 4: JSON Schema (1 day)
 **Deliverable:** `dockfile_v1_schema.json` for IDE support
@@ -373,16 +392,19 @@ Deferred to later when corresponding services are built:
 ### Phase 5: Testing (2 days)
 **Deliverable:** >90% coverage for MVP models
 **Value:** Schema is rock-solid foundation
+**Note:** Tests pass dicts, no file mocking needed
 
 ### Phase 6: Documentation (1 day)
-**Deliverable:** README with MVP usage examples
+**Deliverable:** README with MVP usage examples (showing dict → DockSpec validation)
 **Value:** Other teams can integrate quickly
+**Clarification:** Emphasize schema validates dicts, SDK handles files
 
 ### Phase 7: Integration (1-2 days)
-**Deliverable:** CLI uses schema, performance validated
+**Deliverable:** SDK uses schema for validation, CLI uses SDK
 **Value:** End-to-end validation works
+**Note:** SDK's `load_dockspec()` does I/O, calls schema for validation
 
-**Total:** ~2 weeks for MVP schema package (vs 3 weeks for full version)
+**Total:** ~10-11 days for MVP schema package (faster without I/O complexity)
 
 ### Future Phases (When Services Ready)
 - **Phase 8:** Add `Policies` model when policy-engine package built
