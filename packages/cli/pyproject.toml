@@ -1,9 +1,32 @@
 [project]
 name = "agentdock-cli"
 version = "0.1.0"
-description = "AgentDock CLI"
+description = "Command-line interface for AgentDock - Deploy and manage AI agents"
+readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["typer>=0.12", "agentdock-sdk>=0.1.0"]
+authors = [
+    {name = "AgentDock Team"}
+]
+keywords = ["ai", "agents", "cli", "deployment", "langgraph", "langchain"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "typer>=0.12.0",
+    "rich>=13.7.0",
+    "agentdock-sdk>=0.1.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0"
+]
 
 [project.scripts]
 agentdock = "agentdock_cli.main:app"

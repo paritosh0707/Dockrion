@@ -1,24 +1,29 @@
+"""AgentDock CLI - Main entry point."""
 import typer
-from agentdock_sdk.validate import validate
-from agentdock_sdk.deploy import deploy, run_local
+from . import validate_cmd, test_cmd, build_cmd, run_cmd, logs_cmd, init_cmd, info_cmd
 
-app = typer.Typer(help="AgentDock CLI")
+app = typer.Typer(
+    name="agentdock",
+    help="AgentDock CLI - Deploy and manage AI agents",
+    no_args_is_help=True,
+    add_completion=False
+)
 
-@app.command()
-def validate_cmd(path: str = "Dockfile.yaml"):
-    res = validate(path)
-    typer.echo("✅ Dockfile valid" if res["valid"] else "❌ Invalid")
+# Register all commands
+app.command()(validate_cmd.validate)
+app.command()(test_cmd.test)
+app.command()(build_cmd.build)
+app.command()(run_cmd.run)
+app.command()(logs_cmd.logs)
+app.command()(init_cmd.init)
+app.command()(info_cmd.version)
+app.command()(info_cmd.doctor)
 
-@app.command()
-def build(path: str = "Dockfile.yaml"):
-    info = deploy(path, target="local")
-    typer.echo(f"Built image: {info['image']}")
 
-@app.command()
-def run(path: str = "Dockfile.yaml"):
-    proc = run_local(path)
-    typer.echo("Runtime started. Ctrl+C to stop.")
-    try:
-        proc.wait()
-    except KeyboardInterrupt:
-        proc.terminate()
+def main():
+    """Entry point for the CLI."""
+    app()
+
+
+if __name__ == "__main__":
+    main()
