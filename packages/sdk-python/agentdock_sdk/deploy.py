@@ -59,6 +59,22 @@ def deploy(dockfile_path: str, target: str = "local", **kwargs) -> Dict[str, Any
             "Visit: https://docs.docker.com/get-docker/"
         )
     
+    # Generate runtime files (needed for Docker build)
+    runtime_dir = Path(".agentdock_runtime")
+    runtime_dir.mkdir(exist_ok=True)
+    
+    # Write runtime code
+    runtime_code = _render_runtime(spec)
+    main_file = runtime_dir / "main.py"
+    with open(main_file, "w", encoding="utf-8") as f:
+        f.write(runtime_code)
+    
+    # Write requirements.txt
+    requirements = _generate_requirements(spec)
+    req_file = runtime_dir / "requirements.txt"
+    with open(req_file, "w", encoding="utf-8") as f:
+        f.write(requirements)
+    
     # Build the image
     try:
         dockerfile_content = _render_dockerfile(spec)
