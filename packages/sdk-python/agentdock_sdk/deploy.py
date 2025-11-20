@@ -62,12 +62,13 @@ def deploy(dockfile_path: str, target: str = "local", **kwargs) -> Dict[str, Any
     # Build the image
     try:
         dockerfile_content = _render_dockerfile(spec)
-        subprocess.check_call(
+        result = subprocess.run(
             ["docker", "build", "-t", image, "-f", "-", "."],
             input=dockerfile_content.encode(),
             cwd=".",
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True
         )
     except subprocess.CalledProcessError as e:
         raise AgentDockError(
