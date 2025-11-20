@@ -181,7 +181,8 @@ class AgentConfig(BaseModel):
     name: str
     description: Optional[str] = None
     entrypoint: str
-    framework: str  # Validated against SUPPORTED_FRAMEWORKS from common
+    framework: Literal[tuple(SUPPORTED_FRAMEWORKS)]  # Validated against SUPPORTED_FRAMEWORKS from common
+    # framework: str  # Validated against SUPPORTED_FRAMEWORKS from common
     
     model_config = ConfigDict(extra="allow")
     
