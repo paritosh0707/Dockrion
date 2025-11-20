@@ -345,7 +345,6 @@ def _render_runtime(spec: DockSpec) -> str:
     # Use exclude_none=True to avoid validation issues with None values
     # Use mode='json' to ensure JSON-serializable output
     spec_json = json.dumps(spec.model_dump(exclude_none=True, mode='json'), indent=2)
-    
     # Determine if we need policy engine
     has_policies = spec.policies is not None
     
@@ -364,11 +363,19 @@ This runtime leverages the full AgentDock infrastructure:
 - Common utilities for error handling and logging
 """
 import os
+import sys
 import time
+from pathlib import Path
 from typing import Dict, Any
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+
+# Add project root to Python path so agent modules can be imported
+# Runtime is in .agentdock_runtime/, project root is parent directory
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 # Import AgentDock packages
 from agentdock_adapters import get_adapter
