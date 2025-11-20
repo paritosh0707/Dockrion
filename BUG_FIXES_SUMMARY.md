@@ -289,6 +289,65 @@ subprocess.run(
 
 ---
 
+---
+
+## Additional Bugs Fixed (Post-Initial Review)
+
+### 3. Docker Requirements Path Error
+**Severity**: Medium  
+**Component**: `packages/sdk-python/agentdock_sdk/deploy.py`  
+**Issue**: Docker build was failing to find `requirements.txt` even though it was copied to `/app/requirements.txt`.
+
+**Error Message**:
+```
+ERROR: Could not open requirements file: [Errno 2] No such file or directory: 'requirements.txt'
+```
+
+**Root Cause**: The `RUN pip install` command used a relative path `requirements.txt` which wasn't resolving correctly in the Docker build context.
+
+**Fix**: Changed to use absolute path `/app/requirements.txt` in the RUN command.
+
+---
+
+### 4. Missing AgentDock Dependencies in Docker
+**Severity**: Critical  
+**Component**: `packages/sdk-python/agentdock_sdk/deploy.py`  
+**Issue**: Docker build was failing because the generated runtime tried to install `agentdock-common`, `agentdock-adapters`, and `agentdock-schema` packages which are not published to PyPI.
+
+**Error Message**:
+```
+ERROR: Could not find a version that satisfies the requirement agentdock-common>=0.1.0
+ERROR: No matching distribution found for agentdock-common>=0.1.0
+```
+
+**Root Cause**: 
+- The requirements.txt included internal AgentDock packages
+- These packages are not published to PyPI
+- Docker build couldn't install them from public repositories
+- The runtime code imported `agentdock_adapters` which wouldn't be available
+
+**Fix**:
+1. **Updated `_generate_requirements()`**:
+   - Removed all unpublished `agentdock-*` packages
+   - Kept only publicly available packages (fastapi, uvicorn, prometheus-client, pydantic)
+   - Added framework-specific dependencies (langgraph, langchain)
+
+2. **Updated `_render_runtime()`**:
+   - Removed dependency on `agentdock_adapters.get_adapter()`
+   - Implemented direct agent loading using `importlib`
+   - Added `load_agent()` function that dynamically imports the agent
+   - Updated invoke endpoint to call agent directly
+   - Runtime is now completely self-contained
+
+3. **Updated `_render_dockerfile()`**:
+   - Added logic to extract agent directory from entrypoint
+   - Added COPY command to include agent code in Docker image
+   - Ensures agent module is available at runtime
+
+**Impact**: Docker images can now be built successfully without requiring internal AgentDock packages to be published.
+
+---
+
 ## Conclusion
 
 All critical bugs have been identified and fixed. The AgentDock SDK and CLI packages are now:
@@ -296,6 +355,18 @@ All critical bugs have been identified and fixed. The AgentDock SDK and CLI pack
 - ✅ Well-tested with 90+ integration tests
 - ✅ Production-ready
 - ✅ Properly documented
+- ✅ Docker builds work end-to-end
 
 The `agentdock build` command, which was completely broken, now works correctly and can successfully build Docker images for agent deployment.
+
+### Final Verification
+```bash
+$ agentdock build
+ℹ️  Building Docker image for agent: invoice-copilot
+✅ Successfully built image: agentdock/invoice-copilot:dev
+```
+
+**Total Bugs Fixed**: 4 (2 critical, 1 high, 1 medium)  
+**Total Tests Added**: 90+ integration tests  
+**Build Status**: ✅ Working
 
