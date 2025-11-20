@@ -182,16 +182,16 @@ def _generate_requirements(spec: DockSpec) -> str:
         requirements.txt content as string
         
     Note:
-        For Docker builds, we only include publicly available packages.
-        Internal AgentDock packages (common, adapters, schema, policy) are
-        not included as they're not published to PyPI yet. The runtime code
-        is self-contained and doesn't require these packages.
+        AgentDock packages will be installed from local copies bundled in the image.
+        This allows us to use the full adapter layer and schema validation.
     """
     requirements = [
+        # Core dependencies
         "fastapi>=0.104.0",
         "uvicorn>=0.24.0",
         "prometheus-client>=0.19.0",
-        "pydantic>=2.0.0"
+        "pydantic>=2.0.0",
+        "pyyaml>=6.0"
     ]
     
     # Add framework-specific dependencies
@@ -202,7 +202,8 @@ def _generate_requirements(spec: DockSpec) -> str:
     elif framework == "langchain":
         requirements.append("langchain>=0.1.0")
     
-    # Note: Policy engine support will be added in V1.1+ when packages are published
+    # Note: agentdock-* packages will be installed from /agentdock_packages/
+    # in the Dockerfile using pip install -e
     
     return "\n".join(requirements) + "\n"
 
@@ -227,9 +228,14 @@ def _render_dockerfile(spec: DockSpec) -> str:
     else:
         agent_dir = "app"
     
-    return f"""FROM python:3.11-slim
+    return f"""FROM python:3.12-slim
 
 WORKDIR /app
+
+# Copy AgentDock packages (to be installed locally)
+COPY packages/common-py/ /agentdock_packages/common-py/
+COPY packages/schema/ /agentdock_packages/schema/
+COPY packages/adapters/ /agentdock_packages/adapters/
 
 # Copy agent code
 COPY {agent_dir}/ /app/{agent_dir}/
@@ -238,7 +244,12 @@ COPY {agent_dir}/ /app/{agent_dir}/
 COPY .agentdock_runtime/main.py /app/main.py
 COPY .agentdock_runtime/requirements.txt /app/requirements.txt
 
-# Install dependencies
+# Install AgentDock packages first (from local copies)
+RUN pip install --no-cache-dir -e /agentdock_packages/common-py && \\
+    pip install --no-cache-dir -e /agentdock_packages/schema && \\
+    pip install --no-cache-dir -e /agentdock_packages/adapters
+
+# Install other dependencies
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 EXPOSE {port}
@@ -274,15 +285,27 @@ def _render_runtime(spec: DockSpec) -> str:
 Generated AgentDock Runtime
 Agent: {spec.agent.name}
 Framework: {spec.agent.framework}
+
+This runtime leverages the full AgentDock infrastructure:
+- Adapter layer for framework-agnostic agent invocation
+- Schema validation for inputs/outputs
+- Common utilities for error handling and logging
 """
 import os
-import sys
 import time
-import importlib
 from typing import Dict, Any
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+
+# Import AgentDock packages
+from agentdock_adapters import get_adapter
+from agentdock_schema import DockSpec
+from agentdock_common.errors import AgentDockError, ValidationError
+from agentdock_common.logger import get_logger
+
+# Initialize logger
+logger = get_logger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -292,26 +315,17 @@ app = FastAPI(
 )
 
 # Load agent specification
-SPEC = {spec_json}
+SPEC_DATA = {spec_json}
+SPEC = DockSpec.model_validate(SPEC_DATA)
 
-# Load agent dynamically
-def load_agent():
-    """Load the agent from the entrypoint."""
-    entrypoint = "{entrypoint}"
-    if ":" not in entrypoint:
-        raise ValueError(f"Invalid entrypoint format: {{entrypoint}}. Expected 'module:function'")
-    
-    module_path, func_name = entrypoint.rsplit(":", 1)
-    
-    try:
-        module = importlib.import_module(module_path)
-        build_func = getattr(module, func_name)
-        return build_func()
-    except Exception as e:
-        raise RuntimeError(f"Failed to load agent from {{entrypoint}}: {{e}}")
+# Initialize adapter and load agent
+logger.info(f"Initializing {{SPEC.agent.framework}} adapter...")
+adapter = get_adapter(SPEC.agent.framework)
 
-# Initialize agent
-agent = load_agent()
+logger.info(f"Loading agent from {{SPEC.agent.entrypoint}}...")
+adapter.load(SPEC.agent.entrypoint)
+
+logger.info(f"Agent {{SPEC.agent.name}} loaded successfully")
 
 '''
     
@@ -350,27 +364,35 @@ async def metrics():
 
 @app.post("/invoke")
 async def invoke(request: Request):
-    """Invoke the agent with input payload"""
+    """Invoke the agent with input payload.
+    
+    Uses the adapter layer for framework-agnostic invocation.
+    """
     try:
         # Get payload
         payload = await request.json()
+        
+        logger.info(f"Received invocation request: {{payload}}")
         
         # Optional: Check API key
         api_key = request.headers.get("X-API-Key")
         if os.environ.get("AGENTDOCK_REQUIRE_AUTH", "false").lower() == "true":
             if not api_key or api_key != os.environ.get("AGENTDOCK_API_KEY", ""):
+                logger.warning("Unauthorized access attempt")
                 raise HTTPException(status_code=401, detail="Invalid or missing API key")
         
-        # Invoke agent
+        # Optional: Validate input against schema
+        if SPEC.io_schema and SPEC.io_schema.input:
+            # TODO: Add input validation in V1.1+
+            pass
+        
+        # Invoke agent using adapter layer
+        logger.info("Invoking agent via adapter...")
         start_time = time.time()
-        # For LangGraph agents, invoke with the payload
-        if hasattr(agent, 'invoke'):
-            result = agent.invoke(payload)
-        elif callable(agent):
-            result = agent(payload)
-        else:
-            raise RuntimeError("Agent is not callable")
+        result = adapter.invoke(payload)
         latency = time.time() - start_time
+        
+        logger.info(f"Agent invocation completed in {{latency:.3f}}s")
 '''
     
     if has_policies:
@@ -380,14 +402,42 @@ async def invoke(request: Request):
 '''
     
     code += '''        
+        # Optional: Validate output against schema
+        if SPEC.io_schema and SPEC.io_schema.output:
+            # TODO: Add output validation in V1.1+
+            pass
+        
         # Return response
         return JSONResponse({
             "success": True,
             "output": result,
-            "latency_s": round(latency, 3)
+            "latency_s": round(latency, 3),
+            "agent": SPEC.agent.name,
+            "framework": SPEC.agent.framework
         })
         
+    except ValidationError as e:
+        logger.error(f"Validation error: {{e}}")
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "error": str(e),
+                "error_type": "ValidationError"
+            }
+        )
+    except AgentDockError as e:
+        logger.error(f"AgentDock error: {{e}}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e),
+                "error_type": "AgentDockError"
+            }
+        )
     except Exception as e:
+        logger.error(f"Unexpected error: {{e}}", exc_info=True)
         return JSONResponse(
             status_code=500,
             content={
