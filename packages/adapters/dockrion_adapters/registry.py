@@ -1,20 +1,30 @@
 """
 Adapter Registry and Factory
 
-This module provides the factory function for getting framework-specific adapters.
-Uses a registry pattern to map framework names to adapter classes.
+This module provides factory functions for getting framework-specific adapters
+and handler adapters. Uses a registry pattern to map framework names to adapter classes.
+
+Supports two modes:
+1. Framework Adapters: For LangGraph, LangChain, etc. (entrypoint mode)
+2. Handler Adapter: For direct callable functions (handler mode)
 
 Design:
 - Central registry of framework -> adapter mappings
-- Factory function returns appropriate adapter instance
+- Factory functions for both modes
 - Extensible - easy to add new frameworks
 - Type-safe with Protocol
 
 Usage:
-    from dockrion_adapters import get_adapter
+    from dockrion_adapters import get_adapter, get_handler_adapter
     
+    # Framework mode
     adapter = get_adapter("langgraph")
     adapter.load("app.graph:build_graph")
+    result = adapter.invoke(payload)
+    
+    # Handler mode
+    adapter = get_handler_adapter()
+    adapter.load("app.service:process_request")
     result = adapter.invoke(payload)
 """
 
@@ -23,12 +33,14 @@ from dockrion_common import ValidationError, get_logger
 
 from .base import AgentAdapter
 from .langgraph_adapter import LangGraphAdapter
+from .handler_adapter import HandlerAdapter
 
 logger = get_logger("adapter-registry")
 
 # Registry mapping framework names to adapter classes
 _ADAPTER_REGISTRY: Dict[str, Type[AgentAdapter]] = {
     "langgraph": LangGraphAdapter,
+    "custom": HandlerAdapter,  # Handler mode uses "custom" framework
     # Phase 2: Add more frameworks
     # "langchain": LangChainAdapter,
     # "crewai": CrewAIAdapter,
@@ -81,6 +93,30 @@ def get_adapter(framework: str) -> AgentAdapter:
     
     logger.debug("Adapter created", framework=framework_lower)
     
+    return adapter
+
+
+def get_handler_adapter() -> HandlerAdapter:
+    """
+    Get a HandlerAdapter instance for direct callable functions.
+    
+    Use this when the agent config specifies a `handler` instead of `entrypoint`.
+    Handler mode is for service wrapper functions that process requests directly
+    without going through a framework-specific agent object.
+    
+    Returns:
+        Fresh HandlerAdapter instance
+        
+    Examples:
+        >>> adapter = get_handler_adapter()
+        >>> adapter.load("app.service:process_request")
+        >>> result = adapter.invoke({"query": "hello"})
+        
+    See Also:
+        get_adapter: For framework-specific agents (entrypoint mode)
+    """
+    adapter = HandlerAdapter()
+    logger.debug("Handler adapter created")
     return adapter
 
 

@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 from dockrion_schema import DockSpec
-from dockrion_adapters import get_adapter
+from dockrion_adapters import get_adapter, get_handler_adapter
 from dockrion_common.errors import DockrionError, ValidationError
 from dockrion_common.logger import get_logger
 
@@ -33,13 +33,21 @@ class RuntimeConfig:
     """
     Runtime configuration extracted from DockSpec.
     
+    Supports two modes:
+    1. **Entrypoint Mode**: Uses framework adapter to load agent with .invoke()
+    2. **Handler Mode**: Uses handler adapter to call function directly
+    
     Provides easy access to configuration values with defaults.
     """
     # Agent info
     agent_name: str
     agent_framework: str
-    agent_entrypoint: str
     agent_description: str = "Dockrion Agent"
+    
+    # Invocation mode (entrypoint or handler)
+    agent_entrypoint: Optional[str] = None  # Factory → Agent pattern
+    agent_handler: Optional[str] = None     # Direct callable pattern
+    use_handler_mode: bool = False          # True if handler mode
     
     # Server config
     host: str = "0.0.0.0"
@@ -60,14 +68,25 @@ class RuntimeConfig:
     cors_origins: list = field(default_factory=lambda: ["*"])
     cors_methods: list = field(default_factory=lambda: ["*"])
     
+    @property
+    def invocation_target(self) -> str:
+        """Get the target path for invocation (handler or entrypoint)."""
+        return self.agent_handler if self.use_handler_mode else self.agent_entrypoint
+    
     @classmethod
-    def from_spec(cls, spec: DockSpec, entrypoint_override: Optional[str] = None) -> "RuntimeConfig":
+    def from_spec(
+        cls,
+        spec: DockSpec,
+        entrypoint_override: Optional[str] = None,
+        handler_override: Optional[str] = None
+    ) -> "RuntimeConfig":
         """
         Create RuntimeConfig from DockSpec.
         
         Args:
             spec: Validated DockSpec
             entrypoint_override: Override entrypoint from spec
+            handler_override: Override handler from spec
             
         Returns:
             RuntimeConfig instance
@@ -76,6 +95,11 @@ class RuntimeConfig:
         expose = spec.expose
         auth = spec.auth
         metadata = spec.metadata
+        
+        # Determine mode: handler takes precedence over entrypoint
+        handler = handler_override or agent.handler
+        entrypoint = entrypoint_override or agent.entrypoint
+        use_handler_mode = handler is not None
         
         # arguments is Dict[str, Any] in schema - always a dict
         arguments = spec.arguments if spec.arguments else {}
@@ -94,9 +118,11 @@ class RuntimeConfig:
         
         return cls(
             agent_name=agent.name,
-            agent_framework=agent.framework,
-            agent_entrypoint=entrypoint_override or agent.entrypoint,
+            agent_framework=agent.framework or "custom",
             agent_description=agent.description or "Dockrion Agent",
+            agent_entrypoint=entrypoint,
+            agent_handler=handler,
+            use_handler_mode=use_handler_mode,
             host=expose.host if expose else "0.0.0.0",
             port=expose.port if expose else 8080,
             enable_streaming=bool(expose and expose.streaming and expose.streaming != "none"),
@@ -129,6 +155,7 @@ class RuntimeState:
 def create_app(
     spec: DockSpec,
     agent_entrypoint: Optional[str] = None,
+    agent_handler: Optional[str] = None,
     extra_config: Optional[Dict[str, Any]] = None
 ) -> FastAPI:
     """
@@ -143,22 +170,28 @@ def create_app(
     - Authentication
     - Policy enforcement
     
+    Supports two modes:
+    1. **Entrypoint Mode**: Uses framework adapter (LangGraph, etc.)
+    2. **Handler Mode**: Uses direct callable function
+    
     Args:
         spec: Validated DockSpec configuration
         agent_entrypoint: Override entrypoint from spec (optional)
+        agent_handler: Override handler from spec (optional)
         extra_config: Additional configuration options
         
     Returns:
         Configured FastAPI application
         
     Example:
-        >>> from dockrion_schema import DockSpec
-        >>> spec = DockSpec.model_validate(spec_data)
-        >>> app = create_app(spec)
-        >>> # Run with: uvicorn.run(app, host="0.0.0.0", port=8080)
+        >>> # Entrypoint mode (framework agent)
+        >>> app = create_app(spec, agent_entrypoint="app.graph:build_graph")
+        
+        >>> # Handler mode (service function)
+        >>> app = create_app(spec, agent_handler="app.service:process_request")
     """
     # Build configuration
-    config = RuntimeConfig.from_spec(spec, agent_entrypoint)
+    config = RuntimeConfig.from_spec(spec, agent_entrypoint, agent_handler)
     
     # Create shared state
     state = RuntimeState()
@@ -178,17 +211,28 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         """Manage application lifecycle."""
-        logger.info(f"🚀 Starting Dockrion Agent: {config.agent_name}")
+        mode_str = "Handler" if config.use_handler_mode else "Agent"
+        target = config.invocation_target
+        
+        logger.info(f"🚀 Starting Dockrion {mode_str}: {config.agent_name}")
+        logger.info(f"   Mode: {'handler' if config.use_handler_mode else 'entrypoint'}")
         logger.info(f"   Framework: {config.agent_framework}")
-        logger.info(f"   Entrypoint: {config.agent_entrypoint}")
+        logger.info(f"   Target: {target}")
         
         try:
-            # Initialize adapter and load agent
-            state.adapter = get_adapter(config.agent_framework)
-            logger.info(f"✅ {config.agent_framework} adapter initialized")
-            
-            state.adapter.load(config.agent_entrypoint)
-            logger.info(f"✅ Agent loaded from {config.agent_entrypoint}")
+            # Initialize adapter based on mode
+            if config.use_handler_mode:
+                # Handler mode: use HandlerAdapter
+                state.adapter = get_handler_adapter()
+                logger.info("✅ Handler adapter initialized")
+                state.adapter.load(config.agent_handler)
+                logger.info(f"✅ Handler loaded from {config.agent_handler}")
+            else:
+                # Entrypoint mode: use framework adapter
+                state.adapter = get_adapter(config.agent_framework)
+                logger.info(f"✅ {config.agent_framework} adapter initialized")
+                state.adapter.load(config.agent_entrypoint)
+                logger.info(f"✅ Agent loaded from {config.agent_entrypoint}")
             
             state.ready = True
             logger.info(f"🎯 Agent {config.agent_name} ready on {config.host}:{config.port}")

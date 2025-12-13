@@ -93,6 +93,7 @@ from .constants import (
 # Validation utilities
 from .validation import (
     validate_entrypoint,
+    validate_handler,
     validate_agent_name,
     parse_rate_limit,
     validate_url,
@@ -207,6 +208,7 @@ __all__ = [
     "HTTP_SERVICE_UNAVAILABLE",
     # Validation
     "validate_entrypoint",
+    "validate_handler",
     "validate_agent_name",
     "parse_rate_limit",
     "validate_url",

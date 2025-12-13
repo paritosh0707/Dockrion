@@ -1,0 +1,74 @@
+# =============================================================================
+# Dockrion Example: Handler Mode
+# =============================================================================
+# This example shows how to use handler mode for custom service functions.
+# Handler mode is ideal when you need:
+# - Custom preprocessing/postprocessing logic
+# - Business logic wrappers around agents
+# - Simpler use cases without full framework patterns
+#
+# Compare with Dockfile.yaml (entrypoint mode) for the framework agent pattern.
+# =============================================================================
+
+version: "1.0"
+
+agent:
+  name: invoice-service
+  description: "Invoice processing service with custom handler logic."
+  
+  # Handler mode: Point to a direct callable function
+  # The function receives payload dict and returns response dict
+  handler: examples.invoice_copilot.app.service:process_invoice
+  
+  # Framework is optional for handlers (defaults to "custom")
+  # But can be specified for dependency detection in requirements.txt
+  framework: custom
+
+model:
+  provider: openai
+  name: gpt-4o-mini
+  temperature: 0.2
+  max_tokens: 1500
+
+io_schema:
+  input:
+    type: object
+    required: [document_text]
+    properties:
+      document_text: { type: string, description: "Invoice text to process" }
+      currency_hint: { type: string, description: "Expected currency (INR, USD, EUR)" }
+      vendor_hint: { type: string, description: "Known vendor name" }
+      user_id: { type: string, description: "User ID for tracking" }
+  output:
+    type: object
+    required: [vendor, invoice_number, success]
+    properties:
+      vendor: { type: string }
+      invoice_number: { type: string }
+      invoice_date: { type: string }
+      total_amount: { type: number }
+      currency: { type: string }
+      line_items: { type: array }
+      processing_metadata: { type: object }
+      success: { type: boolean }
+
+arguments:
+  timeout_sec: 30
+
+auth:
+  mode: api_key
+
+expose:
+  rest: true
+  streaming: none  # Handlers typically don't stream
+  port: 8080
+  host: "0.0.0.0"
+  cors:
+    origins: ["*"]
+    methods: ["GET", "POST", "OPTIONS"]
+
+metadata:
+  maintainer: "Dockrion Team"
+  version: "v1.0.0"
+  tags: ["handler-example", "invoice", "service"]
+

@@ -1,8 +1,13 @@
 """
 dockrion Adapters Package
 
-Provides uniform interface to different agent frameworks (LangGraph, LangChain, etc.),
-enabling dockrion runtime to invoke any agent type through a consistent API.
+Provides uniform interface to different agent frameworks (LangGraph, LangChain, etc.)
+and custom handler functions, enabling dockrion runtime to invoke any agent type
+through a consistent API.
+
+Supports two modes:
+1. **Framework Agents** (entrypoint mode): LangGraph, LangChain, etc.
+2. **Handler Functions** (handler mode): Direct callable functions
 
 Public API:
     # Protocol
@@ -10,9 +15,11 @@ Public API:
     
     # Concrete Adapters
     - LangGraphAdapter: Adapter for LangGraph compiled graphs
+    - HandlerAdapter: Adapter for direct callable handler functions
     
     # Factory
     - get_adapter: Get adapter instance for framework
+    - get_handler_adapter: Get adapter for handler functions
     - register_adapter: Register custom adapter
     - list_supported_frameworks: Get list of supported frameworks
     - is_framework_supported: Check if framework is supported
@@ -26,19 +33,17 @@ Public API:
     - InvalidOutputError: Agent returned non-dict
 
 Usage:
-    from dockrion_adapters import get_adapter
+    from dockrion_adapters import get_adapter, get_handler_adapter
     
-    # Get adapter for framework
+    # Framework agent (entrypoint mode)
     adapter = get_adapter("langgraph")
-    
-    # Load agent from entrypoint
     adapter.load("examples.invoice_copilot.app.graph:build_graph")
+    result = adapter.invoke({"document_text": "INVOICE #123..."})
     
-    # Invoke agent
-    result = adapter.invoke({
-        "document_text": "INVOICE #123...",
-        "currency_hint": "USD"
-    })
+    # Handler function (handler mode)
+    adapter = get_handler_adapter()
+    adapter.load("app.service:process_request")
+    result = adapter.invoke({"query": "hello"})
 """
 
 # Protocol and base classes
@@ -51,10 +56,12 @@ from .base import (
 
 # Concrete adapter implementations
 from .langgraph_adapter import LangGraphAdapter
+from .handler_adapter import HandlerAdapter
 
 # Factory and registry functions
 from .registry import (
     get_adapter,
+    get_handler_adapter,
     register_adapter,
     list_supported_frameworks,
     is_framework_supported,
@@ -84,8 +91,10 @@ __all__ = [
     "StatefulAgentAdapter",
     # Adapters
     "LangGraphAdapter",
+    "HandlerAdapter",
     # Factory
     "get_adapter",
+    "get_handler_adapter",
     "register_adapter",
     "list_supported_frameworks",
     "is_framework_supported",

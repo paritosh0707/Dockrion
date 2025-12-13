@@ -18,6 +18,7 @@ from .errors import ValidationError
 from .constants import (
     AGENT_NAME_PATTERN,
     ENTRYPOINT_PATTERN,
+    HANDLER_PATTERN,
     RATE_LIMIT_PATTERN,
 )
 
@@ -72,6 +73,66 @@ def validate_entrypoint(entrypoint: str) -> Tuple[str, str]:
             "Entrypoint contains invalid characters. "
             "Use only alphanumeric, dots (.), and underscores (_). "
             f"Got: '{entrypoint}'"
+        )
+    
+    return module_path.strip(), callable_name.strip()
+
+
+def validate_handler(handler: str) -> Tuple[str, str]:
+    """
+    Validate and parse handler format: 'module.path:callable'.
+    
+    Handlers are direct callable functions (not factories that return agents).
+    The format is identical to entrypoint, but semantic meaning differs:
+    - entrypoint: factory function that returns an agent with .invoke() method
+    - handler: direct callable function that processes requests
+    
+    Args:
+        handler: Handler string to validate
+        
+    Returns:
+        Tuple of (module_path, callable_name)
+        
+    Raises:
+        ValidationError: If handler format is invalid
+        
+    Examples:
+        >>> validate_handler("app.service:process_request")
+        ('app.service', 'process_request')
+        
+        >>> validate_handler("mymodule:handle_invoice")
+        ('mymodule', 'handle_invoice')
+    """
+    if not handler:
+        raise ValidationError("Handler cannot be empty")
+    
+    if ":" not in handler:
+        raise ValidationError(
+            "Handler must be in format 'module:callable'. "
+            f"Got: '{handler}'"
+        )
+    
+    parts = handler.split(":")
+    if len(parts) != 2:
+        raise ValidationError(
+            "Handler must have exactly one ':' separator. "
+            f"Got: '{handler}'"
+        )
+    
+    module_path, callable_name = parts
+    
+    if not module_path or not callable_name:
+        raise ValidationError(
+            "Both module and callable must be non-empty. "
+            f"Got: '{handler}'"
+        )
+    
+    # Validate format using pattern
+    if not re.match(HANDLER_PATTERN, handler):
+        raise ValidationError(
+            "Handler contains invalid characters. "
+            "Use only alphanumeric, dots (.), and underscores (_). "
+            f"Got: '{handler}'"
         )
     
     return module_path.strip(), callable_name.strip()

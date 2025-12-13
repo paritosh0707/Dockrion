@@ -29,8 +29,11 @@ API_VERSION = "v1"
 # SUPPORTED VALUES (Must match schema definitions)
 # =============================================================================
 
-SUPPORTED_FRAMEWORKS = ["langgraph", "langchain"]
-"""Agent frameworks supported by dockrion"""
+SUPPORTED_FRAMEWORKS = ["langgraph", "langchain", "custom"]
+"""Agent frameworks supported by dockrion. 'custom' is for handler-based agents."""
+
+HANDLER_PATTERN = r"^[\w\.]+:\w+$"
+"""Regex pattern for valid handler format (module:callable)"""
 
 SUPPORTED_PROVIDERS = [
     "openai",

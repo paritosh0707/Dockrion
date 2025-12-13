@@ -33,6 +33,7 @@ from dockrion_common import (
     PERMISSIONS,
     SUPPORTED_DOCKFILE_VERSIONS,
     validate_entrypoint,
+    validate_handler,
     validate_agent_name,
     validate_port,
     parse_rate_limit,
@@ -173,16 +174,45 @@ class AgentConfig(BaseModel):
     """
     Agent metadata and code location.
     
-    Specifies the agent's entrypoint, framework, and descriptive information.
+    Supports two invocation modes:
     
-    Note: framework field uses constants from common package (SUPPORTED_FRAMEWORKS)
-    as the single source of truth for validation.
+    1. **Entrypoint Mode** (Framework Agents):
+       - Uses `entrypoint` field pointing to a factory function
+       - Factory returns an agent object with `.invoke()` method
+       - Requires `framework` field (langgraph, langchain, etc.)
+       
+    2. **Handler Mode** (Service Functions):
+       - Uses `handler` field pointing to a direct callable
+       - Callable receives payload dict, returns response dict
+       - Framework defaults to "custom"
+    
+    At least one of `entrypoint` or `handler` must be provided.
+    If both are provided, `handler` takes precedence for invocation.
+    
+    Examples:
+        # Entrypoint mode (LangGraph agent)
+        agent:
+          name: my-agent
+          entrypoint: app.graph:build_graph
+          framework: langgraph
+        
+        # Handler mode (custom service)
+        agent:
+          name: my-service
+          handler: app.service:process_request
+          framework: custom  # optional, defaults to custom
     """
     name: str
     description: Optional[str] = None
-    entrypoint: str
-    framework: Literal[tuple(SUPPORTED_FRAMEWORKS)]  # Validated against SUPPORTED_FRAMEWORKS from common
-    # framework: str  # Validated against SUPPORTED_FRAMEWORKS from common
+    
+    # Entrypoint mode: factory function returning agent with .invoke()
+    entrypoint: Optional[str] = None
+    
+    # Handler mode: direct callable function(payload) -> response
+    handler: Optional[str] = None
+    
+    # Framework (required for entrypoint, defaults to "custom" for handler)
+    framework: Optional[str] = None
     
     model_config = ConfigDict(extra="allow")
     
@@ -195,26 +225,63 @@ class AgentConfig(BaseModel):
     
     @field_validator("entrypoint")
     @classmethod
-    def validate_entrypoint_format(cls, v: str) -> str:
+    def validate_entrypoint_format(cls, v: Optional[str]) -> Optional[str]:
         """
         Validate entrypoint format and prevent code injection.
         
         Format: 'module.path:callable'
         Prevents: os.system:eval, ../../../etc/passwd:read
         """
-        validate_entrypoint(v)
+        if v is not None:
+            validate_entrypoint(v)
+        return v
+    
+    @field_validator("handler")
+    @classmethod
+    def validate_handler_format(cls, v: Optional[str]) -> Optional[str]:
+        """
+        Validate handler format.
+        
+        Format: 'module.path:callable'
+        Handler must be a callable: def handler(payload: dict) -> dict
+        """
+        if v is not None:
+            validate_handler(v)
         return v
     
     @field_validator("framework")
     @classmethod
-    def validate_framework_supported(cls, v: str) -> str:
+    def validate_framework_supported(cls, v: Optional[str]) -> Optional[str]:
         """Validate framework is supported (uses SUPPORTED_FRAMEWORKS from common)"""
-        if v not in SUPPORTED_FRAMEWORKS:
+        if v is not None and v not in SUPPORTED_FRAMEWORKS:
             raise ValidationError(
                 f"Unsupported framework: '{v}'. "
                 f"Supported frameworks: {', '.join(SUPPORTED_FRAMEWORKS)}"
             )
         return v
+    
+    @model_validator(mode="after")
+    def validate_entrypoint_or_handler(self) -> Self:
+        """Ensure at least one of entrypoint or handler is provided."""
+        if not self.entrypoint and not self.handler:
+            raise ValidationError(
+                "Agent must specify either 'entrypoint' (for framework agents) "
+                "or 'handler' (for service functions). Neither was provided."
+            )
+        
+        # Set default framework based on mode
+        if self.framework is None:
+            if self.handler and not self.entrypoint:
+                # Handler-only mode: default to custom
+                object.__setattr__(self, 'framework', 'custom')
+            elif self.entrypoint:
+                # Entrypoint mode requires explicit framework
+                raise ValidationError(
+                    "Agent with 'entrypoint' must specify 'framework'. "
+                    f"Supported frameworks: {', '.join(SUPPORTED_FRAMEWORKS)}"
+                )
+        
+        return self
 
 
 # =============================================================================
