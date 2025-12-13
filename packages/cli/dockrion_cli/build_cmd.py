@@ -17,6 +17,16 @@ def build(
         "local",
         help="Deployment target (local for V1)"
     ),
+    tag: str = typer.Option(
+        "dev",
+        "--tag",
+        help="Docker image tag (default: dev)",
+    ),
+    no_cache: bool = typer.Option(
+        False,
+        "--no-cache",
+        help="Build Docker image without cache",
+    ),
     verbose: bool = typer.Option(
         False,
         "--verbose", "-v",
@@ -47,6 +57,7 @@ def build(
         try:
             spec = load_dockspec(path)
             agent_name = spec.agent.name
+            expose_port = spec.expose.port if spec.expose else 8080
         except Exception as e:
             error(f"Failed to load Dockfile: {str(e)}")
             raise typer.Exit(1)
@@ -59,7 +70,7 @@ def build(
         
         # Build image
         with console.status("[bold green]Building Docker image..."):
-            result = deploy(path, target=target)
+            result = deploy(path, target=target, tag=tag, no_cache=no_cache)
         
         # Show success
         console.print()
@@ -68,7 +79,7 @@ def build(
         # Show next steps
         console.print("\n[bold]Next steps:[/bold]")
         console.print(f"  1. Run locally:")
-        console.print(f"     [cyan]docker run -p 8080:8080 {result['image']}[/cyan]")
+        console.print(f"     [cyan]docker run -p {expose_port}:{expose_port} {result['image']}[/cyan]")
         console.print(f"  2. Push to registry:")
         console.print(f"     [cyan]docker tag {result['image']} <registry>/{agent_name}:latest[/cyan]")
         console.print(f"     [cyan]docker push <registry>/{agent_name}:latest[/cyan]")
