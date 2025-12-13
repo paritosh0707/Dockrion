@@ -270,12 +270,14 @@ class AgentConfig(BaseModel):
             )
         
         # Set default framework based on mode
+        # Handler takes precedence when both are provided
         if self.framework is None:
-            if self.handler and not self.entrypoint:
-                # Handler-only mode: default to custom
+            if self.handler:
+                # Handler mode (or both specified): default to "custom"
+                # When both are provided, handler takes precedence for invocation
                 object.__setattr__(self, 'framework', 'custom')
-            elif self.entrypoint:
-                # Entrypoint mode requires explicit framework
+            else:
+                # Entrypoint-only mode requires explicit framework
                 raise ValidationError(
                     "Agent with 'entrypoint' must specify 'framework'. "
                     f"Supported frameworks: {', '.join(SUPPORTED_FRAMEWORKS)}"
