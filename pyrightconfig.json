@@ -1,0 +1,17 @@
+{
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "extraPaths": [
+        "./packages/sdk-python",
+        "./packages/schema",
+        "./packages/common-py",
+        "./packages/adapters",
+        "./packages/policy-engine",
+        "./packages/runtime"
+      ]
+    }
+  ],
+  "venvPath": ".",
+  "venv": ".venv"
+}
