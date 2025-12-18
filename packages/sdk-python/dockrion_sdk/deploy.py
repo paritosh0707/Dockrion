@@ -163,6 +163,8 @@ def deploy(
     target: str = "local",
     tag: str = "dev",
     no_cache: bool = False,
+    env_file: Optional[str] = None,
+    allow_missing_secrets: bool = False,
     **kwargs
 ) -> Dict[str, Any]:
     """
@@ -176,6 +178,8 @@ def deploy(
         target: Deployment target ("local" for V1)
         tag: Docker image tag (default: "dev")
         no_cache: If True, build without Docker cache
+        env_file: Optional explicit path to .env file
+        allow_missing_secrets: If True, continue even if required secrets are missing
         **kwargs: Additional deployment options
         
     Returns:
@@ -188,6 +192,7 @@ def deploy(
         
     Raises:
         DockrionError: If deployment fails
+        MissingSecretError: If required secrets are missing and allow_missing_secrets=False
         
     Example:
         >>> result = deploy("Dockfile.yaml", target="local")
@@ -205,10 +210,15 @@ def deploy(
             "Visit: https://docs.docker.com/get-docker/"
         )
     
-    # Load and validate Dockfile
+    # Load and validate Dockfile (with env resolution)
     logger.info(f"Loading Dockfile: {dockfile_path}")
     try:
-        spec = load_dockspec(dockfile_path)
+        spec = load_dockspec(
+            dockfile_path,
+            env_file=env_file,
+            validate_secrets=True,
+            strict_secrets=not allow_missing_secrets
+        )
     except Exception as e:
         raise DockrionError(f"Failed to load Dockfile: {str(e)}")
     
@@ -264,13 +274,14 @@ def run_local(
     dockfile_path: str,
     host: Optional[str] = None,
     port: Optional[int] = None,
-    reload: bool = False
+    reload: bool = False,
+    env_file: Optional[str] = None
 ) -> subprocess.Popen:
     """
     Run an agent locally without Docker (development mode).
     
     This function:
-    1. Loads the Dockfile
+    1. Loads the Dockfile (with env resolution)
     2. Generates a FastAPI runtime using templates
     3. Installs dependencies
     4. Starts the server with uvicorn
@@ -280,22 +291,24 @@ def run_local(
         host: Override host (default from Dockfile or 0.0.0.0)
         port: Override port (default from Dockfile or 8080)
         reload: Enable hot reload for development
+        env_file: Optional explicit path to .env file
         
     Returns:
         subprocess.Popen object (running server)
         
     Raises:
         DockrionError: If startup fails
+        MissingSecretError: If required secrets are missing
         
     Example:
         >>> proc = run_local("Dockfile.yaml", reload=True)
         >>> # Server is now running with hot reload...
         >>> proc.terminate()  # Stop the server
     """
-    # Load and validate Dockfile
+    # Load and validate Dockfile (with env resolution)
     logger.info(f"Loading Dockfile: {dockfile_path}")
     try:
-        spec = load_dockspec(dockfile_path)
+        spec = load_dockspec(dockfile_path, env_file=env_file)
     except Exception as e:
         raise DockrionError(f"Failed to load Dockfile: {str(e)}")
     
@@ -365,7 +378,8 @@ def run_local(
 def generate_runtime(
     dockfile_path: str,
     output_dir: Optional[str] = None,
-    include_dockerfile: bool = True
+    include_dockerfile: bool = True,
+    env_file: Optional[str] = None
 ) -> Dict[str, Path]:
     """
     Generate runtime files without building or running.
@@ -376,6 +390,7 @@ def generate_runtime(
         dockfile_path: Path to the Dockfile
         output_dir: Output directory (default: .dockrion_runtime)
         include_dockerfile: Include Dockerfile in output
+        env_file: Optional explicit path to .env file
         
     Returns:
         Dictionary mapping file names to their paths
@@ -385,10 +400,10 @@ def generate_runtime(
         >>> print(files["main.py"])
         PosixPath('build/main.py')
     """
-    # Load spec
+    # Load spec (with env resolution, non-strict for generation)
     logger.info(f"Loading Dockfile: {dockfile_path}")
     try:
-        spec = load_dockspec(dockfile_path)
+        spec = load_dockspec(dockfile_path, env_file=env_file, strict_secrets=False)
     except Exception as e:
         raise DockrionError(f"Failed to load Dockfile: {str(e)}")
     

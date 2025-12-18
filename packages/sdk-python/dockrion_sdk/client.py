@@ -3,10 +3,20 @@ import re
 import time
 import yaml
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List
 from dockrion_schema.dockfile_v1 import DockSpec
-from dockrion_common.errors import ValidationError, DockrionError
+from dockrion_common.errors import ValidationError, DockrionError, MissingSecretError
+from dockrion_common import (
+    load_env_files,
+    resolve_secrets,
+    validate_secrets as validate_secrets_func,
+    inject_env,
+    get_env_summary,
+    get_logger,
+)
 from dockrion_adapters import get_adapter
+
+logger = get_logger(__name__)
 
 
 def expand_env_vars(data: Any) -> Any:
@@ -56,39 +66,67 @@ def expand_env_vars(data: Any) -> Any:
         return data
 
 
-def load_dockspec(path: str) -> DockSpec:
-    """Load and validate a Dockfile from the filesystem.
+def load_dockspec(
+    path: str,
+    env_file: Optional[str] = None,
+    validate_secrets: bool = True,
+    strict_secrets: bool = True
+) -> DockSpec:
+    """Load and validate a Dockfile from the filesystem with environment resolution.
     
     This function:
-    1. Checks if the file exists
-    2. Reads and parses the YAML file
-    3. Expands environment variables (${VAR} syntax)
-    4. Validates the structure using DockSpec schema
+    1. Loads environment variables from .env and env.yaml files
+    2. Checks if the Dockfile exists
+    3. Reads and parses the YAML file
+    4. Expands environment variables (${VAR} syntax)
+    5. Validates the structure using DockSpec schema
+    6. Optionally validates declared secrets
     
     Args:
         path: Path to the Dockfile (typically "Dockfile.yaml")
+        env_file: Optional explicit path to .env file (overrides auto-detection)
+        validate_secrets: Whether to validate declared secrets (default: True)
+        strict_secrets: If True, raise MissingSecretError for missing required secrets
+                       If False, only log warnings (default: True)
         
     Returns:
         Validated DockSpec object
         
     Raises:
         ValidationError: If file not found, invalid YAML, or schema validation fails
+        MissingSecretError: If strict_secrets=True and required secrets are missing
         
     Example:
         >>> spec = load_dockspec("Dockfile.yaml")
         >>> print(spec.agent.name)
         invoice-copilot
+        
+        >>> spec = load_dockspec("Dockfile.yaml", env_file="./secrets/.env.local")
+        >>> print(spec.agent.name)
+        invoice-copilot
     """
-    file_path = Path(path)
+    file_path = Path(path).resolve()
+    project_root = file_path.parent
     
-    # Check if file exists
+    # 1. Load environment files BEFORE parsing Dockfile
+    # This ensures ${VAR} expansion has access to all env vars
+    try:
+        loaded_env = load_env_files(project_root, env_file)
+        if loaded_env:
+            inject_env(loaded_env)
+            logger.info(f"Loaded {len(loaded_env)} environment variables")
+    except Exception as e:
+        logger.warning(f"Failed to load environment files: {e}")
+        loaded_env = {}
+    
+    # 2. Check if file exists
     if not file_path.exists():
         raise ValidationError(
             f"Dockfile not found: {path}\n"
             f"Make sure the file exists and the path is correct."
         )
     
-    # Read and parse YAML
+    # 3. Read and parse YAML
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -111,7 +149,7 @@ def load_dockspec(path: str) -> DockSpec:
             f"Please add valid configuration."
         )
     
-    # Expand environment variables
+    # 4. Expand environment variables
     try:
         data = expand_env_vars(data)
     except ValidationError:
@@ -123,18 +161,34 @@ def load_dockspec(path: str) -> DockSpec:
             f"Error: {str(e)}"
         )
     
-    # Validate against schema
+    # 5. Validate against schema
     try:
-        return DockSpec.model_validate(data)
+        spec = DockSpec.model_validate(data)
     except Exception as e:
         raise ValidationError(
             f"Invalid Dockfile structure: {path}\n"
             f"Error: {str(e)}\n"
             f"Please check the Dockfile format against the schema."
         )
+    
+    # 6. Validate secrets if declared and validation is enabled
+    if validate_secrets and spec.secrets:
+        # Resolve secrets with full priority chain
+        resolved = resolve_secrets(spec.secrets, loaded_env)
+        
+        # Validate and collect warnings
+        warnings = validate_secrets_func(spec.secrets, resolved, strict=strict_secrets)
+        for warning in warnings:
+            logger.warning(warning)
+    
+    return spec
 
 
-def invoke_local(dockfile_path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+def invoke_local(
+    dockfile_path: str,
+    payload: Dict[str, Any],
+    env_file: Optional[str] = None
+) -> Dict[str, Any]:
     """Invoke an agent locally without starting a server.
     
     This is useful for:
@@ -145,6 +199,7 @@ def invoke_local(dockfile_path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     Args:
         dockfile_path: Path to the Dockfile
         payload: Input data to pass to the agent
+        env_file: Optional explicit path to .env file
         
     Returns:
         Agent response as a dictionary
@@ -152,6 +207,7 @@ def invoke_local(dockfile_path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     Raises:
         ValidationError: If Dockfile is invalid
         DockrionError: If agent loading or invocation fails
+        MissingSecretError: If required secrets are missing
         
     Example:
         >>> result = invoke_local("Dockfile.yaml", {
@@ -161,8 +217,18 @@ def invoke_local(dockfile_path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         >>> print(result["vendor"])
         Acme Corp
     """
-    # Load and validate Dockfile
-    spec = load_dockspec(dockfile_path)
+    from pathlib import Path
+    from dockrion_common import setup_module_path
+    
+    # Load and validate Dockfile (with env resolution)
+    spec = load_dockspec(dockfile_path, env_file=env_file)
+    
+    # Setup Python path for agent module imports
+    # This finds and adds the directory containing the agent's module to sys.path
+    module_path = spec.agent.handler or spec.agent.entrypoint
+    if module_path:
+        dockfile_dir = Path(dockfile_path).resolve().parent
+        setup_module_path(module_path, dockfile_dir)
     
     # Get the appropriate adapter for the framework
     try:

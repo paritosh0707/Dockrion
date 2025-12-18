@@ -2,7 +2,8 @@
 import typer
 from pathlib import Path
 from dockrion_sdk import run_local, load_dockspec
-from .utils import console, success, error, info, handle_error
+from dockrion_common import MissingSecretError, get_env_summary
+from .utils import console, success, error, info, warning, handle_error
 
 app = typer.Typer()
 
@@ -29,6 +30,11 @@ def run(
         "-r",
         help="Enable hot reload for development",
     ),
+    env_file: str | None = typer.Option(
+        None,
+        "--env-file", "-e",
+        help="Path to .env file (overrides auto-detected .env)"
+    ),
     verbose: bool = typer.Option(
         False,
         "--verbose", "-v",
@@ -44,11 +50,18 @@ def run(
     - GET /schema - Input/output schema
     - GET /metrics - Prometheus metrics
     
+    Environment variables are automatically loaded from:
+    - .env file in project root
+    - env.yaml / .dockrion-env.yaml in project root
+    - Shell environment variables
+    - Explicit --env-file if provided (highest priority)
+    
     Press Ctrl+C to stop the server.
     
     Examples:
         dockrion run
         dockrion run custom/Dockfile.yaml
+        dockrion run --env-file ./secrets/.env.local
         dockrion run --verbose
     """
     try:
@@ -57,20 +70,40 @@ def run(
             error(f"Dockfile not found: {path}")
             raise typer.Exit(1)
         
-        # Load spec to get server info
+        # Load spec to get server info (with env resolution)
         try:
-            spec = load_dockspec(path)
+            spec = load_dockspec(path, env_file=env_file)
             dockfile_port = spec.expose.port if spec.expose else 8080
             dockfile_host = spec.expose.host if spec.expose else "0.0.0.0"
+            
+            # Show secrets status if configured
+            if spec.secrets and verbose:
+                from dockrion_common import load_env_files, resolve_secrets
+                project_root = Path(path).resolve().parent
+                loaded_env = load_env_files(project_root, env_file)
+                resolved = resolve_secrets(spec.secrets, loaded_env)
+                summary = get_env_summary(spec.secrets, resolved)
+                
+                if summary.get("has_secrets_config"):
+                    req = summary["required"]
+                    opt = summary["optional"]
+                    info(f"Secrets: {req['set']}/{req['declared']} required, {opt['set']}/{opt['declared']} optional")
+                    
+        except MissingSecretError as e:
+            error(f"Missing required secrets: {', '.join(e.missing)}")
+            console.print("\n[dim]💡 Tip: Create a .env file or use --env-file to provide secrets[/dim]")
+            raise typer.Exit(1)
         except Exception as e:
             error(f"Failed to load Dockfile: {str(e)}")
             raise typer.Exit(1)
         
         info(f"Starting agent server from {path}...")
+        if env_file:
+            info(f"Using env file: {env_file}")
         console.print()
         
-        # Start server
-        proc = run_local(path, host=host, port=port, reload=reload)
+        # Start server (with env resolution)
+        proc = run_local(path, host=host, port=port, reload=reload, env_file=env_file)
 
         effective_host = host or dockfile_host
         effective_port = port or dockfile_port

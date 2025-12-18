@@ -2,6 +2,7 @@
 import typer
 from pathlib import Path
 from dockrion_sdk import deploy, load_dockspec
+from dockrion_common import MissingSecretError, get_env_summary, load_env_files, resolve_secrets
 from .utils import console, success, error, info, warning, handle_error
 
 app = typer.Typer()
@@ -27,6 +28,16 @@ def build(
         "--no-cache",
         help="Build Docker image without cache",
     ),
+    env_file: str | None = typer.Option(
+        None,
+        "--env-file", "-e",
+        help="Path to .env file for validating secrets"
+    ),
+    allow_missing_secrets: bool = typer.Option(
+        False,
+        "--allow-missing-secrets",
+        help="Continue build even if required secrets are missing"
+    ),
     verbose: bool = typer.Option(
         False,
         "--verbose", "-v",
@@ -42,9 +53,20 @@ def build(
     - All dependencies
     - Health checks and metrics endpoints
     
+    Environment variables are validated from:
+    - .env file in project root
+    - env.yaml / .dockrion-env.yaml in project root
+    - Shell environment variables
+    - Explicit --env-file if provided
+    
+    Use --allow-missing-secrets to build even if required secrets are not set
+    (the secrets must be provided at container runtime).
+    
     Examples:
         dockrion build
         dockrion build custom/Dockfile.yaml
+        dockrion build --env-file ./secrets/.env.local
+        dockrion build --allow-missing-secrets
         dockrion build --verbose
     """
     try:
@@ -53,16 +75,59 @@ def build(
             error(f"Dockfile not found: {path}")
             raise typer.Exit(1)
         
-        # Load spec to show info
+        # Load spec to show info (non-strict to get full info first)
         try:
-            spec = load_dockspec(path)
+            spec = load_dockspec(path, env_file=env_file, strict_secrets=False)
             agent_name = spec.agent.name
             expose_port = spec.expose.port if spec.expose else 8080
+            
+            # Show secrets validation status
+            if spec.secrets:
+                project_root = Path(path).resolve().parent
+                loaded_env = load_env_files(project_root, env_file)
+                resolved = resolve_secrets(spec.secrets, loaded_env)
+                summary = get_env_summary(spec.secrets, resolved)
+                
+                if summary.get("has_secrets_config"):
+                    req = summary["required"]
+                    opt = summary["optional"]
+                    
+                    if req["missing"] > 0:
+                        missing_names = [
+                            s.name for s in spec.secrets.required 
+                            if s.name not in resolved or not resolved[s.name]
+                        ]
+                        
+                        if allow_missing_secrets:
+                            warning(f"Missing {req['missing']} required secrets: {', '.join(missing_names)}")
+                            console.print("[dim]  ⚠️  These must be provided at container runtime (docker run -e ...)[/dim]")
+                        else:
+                            error(f"Missing required secrets: {', '.join(missing_names)}")
+                            console.print("\n[dim]💡 Tip: Use --allow-missing-secrets to build anyway,[/dim]")
+                            console.print("[dim]   then provide secrets at runtime with docker run -e VAR=value[/dim]")
+                            raise typer.Exit(1)
+                    elif verbose:
+                        info(f"Secrets: {req['set']}/{req['declared']} required ✓, {opt['set']}/{opt['declared']} optional")
+                    
+        except MissingSecretError as e:
+            if allow_missing_secrets:
+                warning(f"Missing required secrets: {', '.join(e.missing)}")
+                console.print("[dim]  ⚠️  These must be provided at container runtime[/dim]")
+                # Re-load without strict validation
+                spec = load_dockspec(path, env_file=env_file, strict_secrets=False)
+                agent_name = spec.agent.name
+                expose_port = spec.expose.port if spec.expose else 8080
+            else:
+                error(f"Missing required secrets: {', '.join(e.missing)}")
+                console.print("\n[dim]💡 Tip: Use --allow-missing-secrets to build anyway[/dim]")
+                raise typer.Exit(1)
         except Exception as e:
             error(f"Failed to load Dockfile: {str(e)}")
             raise typer.Exit(1)
         
         info(f"Building Docker image for agent: [bold]{agent_name}[/bold]")
+        if env_file:
+            info(f"Using env file: {env_file}")
         
         if verbose:
             console.print()
@@ -70,7 +135,14 @@ def build(
         
         # Build image
         with console.status("[bold green]Building Docker image..."):
-            result = deploy(path, target=target, tag=tag, no_cache=no_cache)
+            result = deploy(
+                path,
+                target=target,
+                tag=tag,
+                no_cache=no_cache,
+                env_file=env_file,
+                allow_missing_secrets=allow_missing_secrets
+            )
         
         # Show success
         console.print()

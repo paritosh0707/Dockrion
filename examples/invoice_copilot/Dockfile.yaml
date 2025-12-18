@@ -63,6 +63,15 @@ io_schema:
 arguments:
   timeout_sec: 30
 
+secrets:
+  required:
+    - name: MY_AGENT_KEY
+      description: "API key for agent authentication"
+  optional:
+    - name: LANGFUSE_SECRET
+      description: "Langfuse telemetry"
+      default: ""
+
 auth:
   mode: api_key
   api_keys:

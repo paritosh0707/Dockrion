@@ -101,7 +101,7 @@ if openapi_security_schemes:
 
 ### Step 1: Rebuild the Runtime
 ```bash
-cd /Users/prakharagarwal/Dockrion/examples/invoice_copilot
+cd /path/to/Dockrion/examples/invoice_copilot
 rm -rf .dockrion_runtime
 MY_AGENT_KEY="test-api-key-12345" dockrion run
 ```

@@ -132,7 +132,10 @@ class TemplateContext:
             Dictionary with all template variables
         """
         # Get spec as dictionary
-        spec_dict = self.spec.model_dump(mode='python', exclude_none=True)
+        # NOTE: exclude_none=False is required so that optional fields like 'handler'
+        # are included with None values. Jinja2's StrictUndefined mode fails if
+        # templates try to access missing dict keys (even in if checks).
+        spec_dict = self.spec.model_dump(mode='python', exclude_none=False)
         
         # Build context with flattened access to common fields
         context = {
@@ -390,7 +393,9 @@ class TemplateRenderer:
         template_file = TEMPLATE_FILES["requirements"]
         logger.info(f"Rendering requirements from template: {template_file}")
         
-        return self.render(template_file, context)
+        result = self.render(template_file, context)
+        
+        return result
     
     def render_all(
         self,

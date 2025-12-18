@@ -18,7 +18,7 @@ Complete guide for installing all Dockrion packages in your development environm
 
 ```bash
 # From repository root
-cd /Users/prakharagarwal/Dockrion
+cd /path/to/Dockrion
 
 # Install all packages in development mode
 uv pip install -e packages/common-py -e packages/schema
@@ -31,7 +31,7 @@ uv pip install -e "packages/common-py[dev]" -e "packages/schema[dev]"
 
 ```bash
 # From repository root
-cd /Users/prakharagarwal/Dockrion
+cd /path/to/Dockrion
 
 # Activate virtual environment first
 source .venv/bin/activate
@@ -52,7 +52,7 @@ pip install -e "packages/common-py[dev]" -e "packages/schema[dev]"
 **Use Case**: Active development, testing changes immediately
 
 ```bash
-cd /Users/prakharagarwal/Dockrion
+cd /path/to/Dockrion
 
 # Install common package
 uv pip install -e packages/common-py
@@ -177,7 +177,7 @@ chmod +x install-all.sh
 
 ```bash
 # From project root
-cd /Users/prakharagarwal/Dockrion
+cd /path/to/Dockrion
 
 # Sync all dependencies from uv.lock
 uv sync
@@ -201,7 +201,7 @@ uv sync
 
 ```bash
 # Using uv (recommended)
-cd /Users/prakharagarwal/Dockrion
+cd /path/to/Dockrion
 uv venv
 
 # Or using Python's venv
@@ -222,10 +222,10 @@ source .venv/bin/activate
 
 ```bash
 which python
-# Should show: /Users/prakharagarwal/Dockrion/.venv/bin/python
+# Should show: /path/to/Dockrion/.venv/bin/python
 
 echo $VIRTUAL_ENV
-# Should show: /Users/prakharagarwal/Dockrion/.venv
+# Should show: /path/to/Dockrion/.venv
 ```
 
 ---
@@ -532,7 +532,7 @@ pip install packages/schema/dist/dockrion_schema-0.1.0-py3-none-any.whl
 
 **For Development (Most Common):**
 ```bash
-cd /Users/prakharagarwal/Dockrion
+cd /path/to/Dockrion
 source .venv/bin/activate
 uv pip install -e packages/common-py -e "packages/schema[dev]"
 ```

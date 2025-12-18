@@ -140,7 +140,7 @@ auth:
 The runtime needs to be regenerated with the new code:
 
 ```bash
-cd /Users/prakharagarwal/Dockrion/examples/invoice_copilot
+cd /path/to/Dockrion/examples/invoice_copilot
 rm -rf .dockrion_runtime
 dockrion run
 ```

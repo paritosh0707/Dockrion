@@ -192,3 +192,36 @@ class PolicyViolationError(DockrionError):
     
     def __init__(self, message: str):
         super().__init__(message, code="POLICY_VIOLATION")
+
+
+class MissingSecretError(ValidationError):
+    """
+    Raised when required secrets/environment variables are missing.
+    
+    This error provides a list of missing secret names for clear
+    error messages and programmatic handling.
+    
+    Use this for:
+    - Missing required environment variables before run
+    - Missing secrets during build validation
+    
+    Example:
+        missing = ["OPENAI_API_KEY", "MY_AGENT_KEY"]
+        raise MissingSecretError(missing)
+        # Message: "Missing required secrets: OPENAI_API_KEY, MY_AGENT_KEY"
+    
+    Attributes:
+        missing: List of missing secret names
+    """
+    
+    def __init__(self, missing: list):
+        self.missing = missing
+        message = f"Missing required secrets: {', '.join(missing)}"
+        super().__init__(message)
+        self.code = "MISSING_SECRET"
+    
+    def to_dict(self) -> dict:
+        """Serialize error with missing secrets list."""
+        result = super().to_dict()
+        result["missing_secrets"] = self.missing
+        return result

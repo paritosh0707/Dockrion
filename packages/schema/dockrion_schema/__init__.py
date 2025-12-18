@@ -56,6 +56,8 @@ from .dockfile_v1 import (
     IOSubSchema,
     ExposeConfig,
     Metadata,
+    SecretDefinition,
+    SecretsConfig,
 )
 
 # Models - Advanced (Future - Phase 2)
@@ -98,6 +100,8 @@ __all__ = [
     "IOSubSchema",
     "ExposeConfig",
     "Metadata",
+    "SecretDefinition",
+    "SecretsConfig",
     # Advanced Models (Future)
     "ModelConfig",
     "Policies",

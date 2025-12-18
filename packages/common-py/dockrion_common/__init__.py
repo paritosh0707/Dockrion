@@ -27,6 +27,7 @@ from .errors import (
     ServiceUnavailableError,
     DeploymentError,
     PolicyViolationError,
+    MissingSecretError,
 )
 
 # Constants
@@ -136,6 +137,22 @@ from .logger import (
     clear_request_id,
 )
 
+# Path utilities
+from .path_utils import (
+    resolve_module_path,
+    add_to_python_path,
+    setup_module_path,
+)
+
+# Environment utilities
+from .env_utils import (
+    load_env_files,
+    resolve_secrets,
+    validate_secrets,
+    inject_env,
+    get_env_summary,
+)
+
 __version__ = "0.1.0"
 
 __all__ = [
@@ -149,6 +166,7 @@ __all__ = [
     "ServiceUnavailableError",
     "DeploymentError",
     "PolicyViolationError",
+    "MissingSecretError",
     # Version info
     "DOCKRION_VERSION",
     "SUPPORTED_DOCKFILE_VERSIONS",
@@ -240,4 +258,14 @@ __all__ = [
     "set_request_id",
     "get_request_id",
     "clear_request_id",
+    # Path utilities
+    "resolve_module_path",
+    "add_to_python_path",
+    "setup_module_path",
+    # Environment utilities
+    "load_env_files",
+    "resolve_secrets",
+    "validate_secrets",
+    "inject_env",
+    "get_env_summary",
 ]

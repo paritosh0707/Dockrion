@@ -34,34 +34,34 @@ langchain>=0.3.0
 langchain-core>=0.3.0
 langchain-community>=0.3.0
 
-{%- if model and model.provider %}
+{% if model and model.provider %}
 # Model Provider: {{ model.provider }}
-{%- if model.provider | lower == 'openai' %}
+{% if model.provider | lower == 'openai' %}
 langchain-openai>=0.2.0
 openai>=1.12.0
-{%- elif model.provider | lower == 'anthropic' %}
+{% elif model.provider | lower == 'anthropic' %}
 langchain-anthropic>=0.2.0
 anthropic>=0.18.0
-{%- elif model.provider | lower == 'google' or model.provider | lower == 'gemini' %}
+{% elif model.provider | lower == 'google' or model.provider | lower == 'gemini' %}
 langchain-google-genai>=2.0.0
 google-generativeai>=0.4.0
-{% elif model.provider | lower == 'azure' -%}
+{% elif model.provider | lower == 'azure' %}
 langchain-openai>=0.2.0
 openai>=1.12.0
-{% elif model.provider | lower == 'cohere' -%}
+{% elif model.provider | lower == 'cohere' %}
 langchain-cohere>=0.3.0
 cohere>=5.0.0
-{% elif model.provider | lower == 'ollama' -%}
+{% elif model.provider | lower == 'ollama' %}
 langchain-community>=0.3.0
 ollama>=0.1.0
-{% elif model.provider | lower == 'huggingface' -%}
+{% elif model.provider | lower == 'huggingface' %}
 langchain-huggingface>=0.1.0
 transformers>=4.36.0
-{% elif model.provider | lower == 'aws' or model.provider | lower == 'bedrock' -%}
+{% elif model.provider | lower == 'aws' or model.provider | lower == 'bedrock' %}
 langchain-aws>=0.2.0
 boto3>=1.34.0
-{% endif -%}
-{% endif -%}
+{% endif %}
+{% endif %}
 
 {% elif agent.framework | lower == 'langchain' -%}
 # -----------------------------------------------------------------------------
@@ -71,19 +71,19 @@ langchain>=0.3.0
 langchain-core>=0.3.0
 langchain-community>=0.3.0
 
-{%- if model and model.provider %}
+{% if model and model.provider %}
 # Model Provider: {{ model.provider }}
-{%- if model.provider | lower == 'openai' %}
+{% if model.provider | lower == 'openai' %}
 langchain-openai>=0.2.0
 openai>=1.12.0
-{%- elif model.provider | lower == 'anthropic' %}
+{% elif model.provider | lower == 'anthropic' %}
 langchain-anthropic>=0.2.0
 anthropic>=0.18.0
-{%- elif model.provider | lower == 'google' or model.provider | lower == 'gemini' %}
+{% elif model.provider | lower == 'google' or model.provider | lower == 'gemini' %}
 langchain-google-genai>=2.0.0
 google-generativeai>=0.4.0
-{% endif -%}
-{% endif -%}
+{% endif %}
+{% endif %}
 
 {% elif agent.framework | lower == 'crewai' -%}
 # -----------------------------------------------------------------------------
@@ -92,13 +92,13 @@ google-generativeai>=0.4.0
 crewai>=0.28.0
 crewai-tools>=0.2.0
 
-{%- if model and model.provider %}
-{%- if model.provider | lower == 'openai' %}
+{% if model and model.provider %}
+{% if model.provider | lower == 'openai' %}
 openai>=1.12.0
-{%- elif model.provider | lower == 'anthropic' %}
+{% elif model.provider | lower == 'anthropic' %}
 anthropic>=0.18.0
-{% endif -%}
-{% endif -%}
+{% endif %}
+{% endif %}
 
 {% elif agent.framework | lower == 'autogen' -%}
 # -----------------------------------------------------------------------------
@@ -106,11 +106,11 @@ anthropic>=0.18.0
 # -----------------------------------------------------------------------------
 pyautogen>=0.2.0
 
-{%- if model and model.provider %}
-{%- if model.provider | lower == 'openai' %}
+{% if model and model.provider %}
+{% if model.provider | lower == 'openai' %}
 openai>=1.12.0
-{% endif -%}
-{% endif -%}
+{% endif %}
+{% endif %}
 
 {% elif agent.framework | lower == 'llamaindex' -%}
 # -----------------------------------------------------------------------------
@@ -119,15 +119,15 @@ openai>=1.12.0
 llama-index>=0.10.0
 llama-index-core>=0.10.0
 
-{%- if model and model.provider %}
-{%- if model.provider | lower == 'openai' %}
+{% if model and model.provider %}
+{% if model.provider | lower == 'openai' %}
 llama-index-llms-openai>=0.1.0
 openai>=1.12.0
-{%- elif model.provider | lower == 'anthropic' %}
+{% elif model.provider | lower == 'anthropic' %}
 llama-index-llms-anthropic>=0.1.0
 anthropic>=0.18.0
-{% endif -%}
-{% endif -%}
+{% endif %}
+{% endif %}
 
 {% else -%}
 # -----------------------------------------------------------------------------
@@ -137,35 +137,35 @@ anthropic>=0.18.0
 
 {% endif -%}
 
-{% if extra_dependencies -%}
+{% if extra_dependencies %}
 # -----------------------------------------------------------------------------
 # Additional Dependencies (user-specified)
 # -----------------------------------------------------------------------------
-{% for dep in extra_dependencies -%}
+{% for dep in extra_dependencies %}
 {{ dep }}
-{% endfor -%}
-{% endif -%}
+{% endfor %}
+{% endif %}
 
-{% if policies and policies.safety -%}
+{% if policies and policies.safety %}
 # -----------------------------------------------------------------------------
 # Security & Policy Dependencies
 # -----------------------------------------------------------------------------
 # For content filtering and PII detection
-{% if policies.safety.redact_patterns -%}
+{% if policies.safety.redact_patterns %}
 regex>=2023.12.0
-{% endif -%}
-{% endif -%}
+{% endif %}
+{% endif %}
 
-{% if observability and observability.langfuse -%}
+{% if observability and observability.langfuse %}
 # -----------------------------------------------------------------------------
 # Observability: Langfuse
 # -----------------------------------------------------------------------------
 langfuse>=2.0.0
-{% endif -%}
+{% endif %}
 
-{% if observability and observability.langsmith -%}
+{% if observability and observability.langsmith %}
 # -----------------------------------------------------------------------------
 # Observability: LangSmith
 # -----------------------------------------------------------------------------
 langsmith>=0.1.0
-{% endif -%}
+{% endif %}

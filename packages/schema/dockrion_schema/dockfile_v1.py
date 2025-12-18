@@ -18,6 +18,8 @@ Usage:
     spec = DockSpec.model_validate(data)
 """
 
+import re
+
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 from typing import Optional, Literal, Dict, List, Any
 from typing_extensions import Self
@@ -757,6 +759,100 @@ class ExposeConfig(BaseModel):
 
 
 # =============================================================================
+# SECRETS CONFIGURATION
+# =============================================================================
+
+class SecretDefinition(BaseModel):
+    """
+    Definition of a secret/environment variable.
+    
+    Used to declare what secrets an agent requires at runtime.
+    This enables validation before deployment and clear documentation
+    of required configuration.
+    
+    Example:
+        ```yaml
+        secrets:
+          required:
+            - name: OPENAI_API_KEY
+              description: "OpenAI API key for LLM calls"
+            - name: MY_AGENT_KEY
+              description: "API key for agent authentication"
+          optional:
+            - name: LANGFUSE_SECRET
+              description: "Langfuse telemetry"
+              default: ""
+        ```
+    """
+    name: str
+    description: Optional[str] = None
+    default: Optional[str] = None
+    
+    model_config = ConfigDict(extra="allow")
+    
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        """Validate secret name follows environment variable conventions."""
+        if not v or not v.strip():
+            raise ValidationError("Secret name cannot be empty")
+        # Allow uppercase letters, numbers, and underscores
+        # Must start with a letter or underscore
+        if not re.match(r'^[A-Z_][A-Z0-9_]*$', v):
+            raise ValidationError(
+                f"Secret name '{v}' must be uppercase with underscores "
+                f"(e.g., MY_API_KEY, OPENAI_KEY_1). "
+                f"Must start with a letter or underscore."
+            )
+        return v
+
+
+class SecretsConfig(BaseModel):
+    """
+    Configuration for required and optional secrets.
+    
+    Secrets declared here are used for:
+    - Validation before run/build to ensure required vars are set
+    - Documentation of what environment variables the agent needs
+    - Auto-loading from .env files with priority resolution
+    
+    Example:
+        ```yaml
+        secrets:
+          required:
+            - name: OPENAI_API_KEY
+              description: "OpenAI API key for LLM calls"
+          optional:
+            - name: DEBUG_MODE
+              description: "Enable debug logging"
+              default: "false"
+        ```
+    """
+    required: List[SecretDefinition] = []
+    optional: List[SecretDefinition] = []
+    
+    model_config = ConfigDict(extra="allow")
+    
+    @model_validator(mode="after")
+    def validate_no_duplicate_names(self) -> Self:
+        """Ensure no duplicate secret names across required and optional."""
+        all_names = [s.name for s in self.required] + [s.name for s in self.optional]
+        seen = set()
+        duplicates = []
+        for name in all_names:
+            if name in seen:
+                duplicates.append(name)
+            seen.add(name)
+        
+        if duplicates:
+            raise ValidationError(
+                f"Duplicate secret names found: {', '.join(duplicates)}. "
+                f"Each secret must have a unique name."
+            )
+        return self
+
+
+# =============================================================================
 # METADATA
 # =============================================================================
 
@@ -808,6 +904,7 @@ class DockSpec(BaseModel):
     observability: Optional[Observability] = None
     expose: ExposeConfig
     metadata: Optional[Metadata] = None
+    secrets: Optional[SecretsConfig] = None
     
     # Allow unknown fields for future expansion (Phase 2+)
     # When new services are built, add their models above and make them optional
