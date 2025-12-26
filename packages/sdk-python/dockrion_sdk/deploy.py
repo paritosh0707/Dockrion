@@ -13,6 +13,8 @@ Uses the template system for generating all deployment artifacts.
 import subprocess
 import sys
 import shutil
+import time
+import socket
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -35,6 +37,7 @@ logger = get_logger(__name__)
 
 RUNTIME_DIR_NAME = ".dockrion_runtime"
 DOCKRION_IMAGE_PREFIX = "dockrion"
+LOCAL_PYPI_PORT = 8099  # Port for local PyPI server during dev builds
 
 
 # ============================================================================
@@ -114,6 +117,117 @@ def _ensure_runtime_dir(base_path: Path = None) -> Path:
     return runtime_dir
 
 
+def _find_workspace_root(start_path: Path = None) -> Optional[Path]:
+    """
+    Find the workspace root containing the packages/ directory.
+    
+    Walks up the directory tree from start_path looking for a directory
+    that contains 'packages/common-py' (indicating the Dockrion monorepo root).
+    
+    Args:
+        start_path: Starting directory (defaults to current working directory)
+        
+    Returns:
+        Path to workspace root, or None if not found
+    """
+    current = start_path or Path.cwd()
+    
+    # Walk up directory tree looking for packages/
+    for parent in [current] + list(current.parents):
+        packages_dir = parent / "packages" / "common-py"
+        if packages_dir.exists():
+            return parent
+    
+    return None
+
+
+def _get_relative_agent_path(workspace_root: Path, agent_dir: Path) -> str:
+    """
+    Get the relative path from workspace root to agent directory.
+    
+    Args:
+        workspace_root: The workspace root directory
+        agent_dir: The agent's directory
+        
+    Returns:
+        Relative path string (e.g., 'examples/invoice_copilot')
+    """
+    try:
+        return str(agent_dir.relative_to(workspace_root))
+    except ValueError:
+        # agent_dir is not under workspace_root
+        return "."
+
+
+def _find_available_port(start_port: int = 8099) -> int:
+    """Find an available port starting from start_port."""
+    port = start_port
+    while port < start_port + 100:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('127.0.0.1', port))
+                return port
+        except OSError:
+            port += 1
+    raise DockrionError(f"Could not find available port in range {start_port}-{start_port+100}")
+
+
+def _start_local_pypi_server(dist_dir: Path) -> tuple[subprocess.Popen, int]:
+    """
+    Start a local PyPI server serving wheels from dist_dir.
+    
+    Args:
+        dist_dir: Directory containing wheel files
+        
+    Returns:
+        Tuple of (server process, port)
+    """
+    port = _find_available_port(LOCAL_PYPI_PORT)
+    
+    # Start pypiserver
+    cmd = [
+        sys.executable, "-m", "pypiserver", 
+        "run",
+        "-p", str(port),
+        str(dist_dir)
+    ]
+    
+    logger.info(f"Starting local PyPI server on port {port}...")
+    
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    
+    # Wait for server to be ready
+    max_retries = 30
+    for i in range(max_retries):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(1)
+                s.connect(('127.0.0.1', port))
+                logger.info(f"Local PyPI server ready on port {port}")
+                return proc, port
+        except (socket.error, ConnectionRefusedError):
+            time.sleep(0.1)
+    
+    # If we get here, server didn't start
+    proc.terminate()
+    raise DockrionError("Failed to start local PyPI server")
+
+
+def _stop_local_pypi_server(proc: subprocess.Popen):
+    """Stop the local PyPI server."""
+    if proc:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+        logger.info("Local PyPI server stopped")
+
+
 def _write_runtime_files(
     spec: DockSpec,
     runtime_dir: Path,
@@ -165,6 +279,7 @@ def deploy(
     no_cache: bool = False,
     env_file: Optional[str] = None,
     allow_missing_secrets: bool = False,
+    dev: bool = False,
     **kwargs
 ) -> Dict[str, Any]:
     """
@@ -180,6 +295,7 @@ def deploy(
         no_cache: If True, build without Docker cache
         env_file: Optional explicit path to .env file
         allow_missing_secrets: If True, continue even if required secrets are missing
+        dev: If True, use local PyPI server for Dockrion packages (development mode)
         **kwargs: Additional deployment options
         
     Returns:
@@ -235,19 +351,62 @@ def deploy(
     image = f"{DOCKRION_IMAGE_PREFIX}/{spec.agent.name}:{tag}"
     logger.info(f"Building Docker image: {image}")
     
-    # Generate Dockerfile
-    dockerfile_content = renderer.render_dockerfile(spec)
+    # Find workspace root for Docker build context
+    agent_dir = Path.cwd()
+    workspace_root = _find_workspace_root(agent_dir)
     
-    # Build command
-    build_cmd = ["docker", "build", "-t", image, "-f", "-", "."]
-    if no_cache:
-        build_cmd.insert(2, "--no-cache")
+    if workspace_root:
+        # We're in a monorepo - use workspace root as build context
+        relative_agent_path = _get_relative_agent_path(workspace_root, agent_dir)
+        build_context = str(workspace_root)
+        logger.info(f"Using workspace root as build context: {workspace_root}")
+        logger.debug(f"Agent relative path: {relative_agent_path}")
+    else:
+        # Standalone agent - use current directory
+        relative_agent_path = "."
+        build_context = "."
+        logger.info("No workspace root found, using current directory as build context")
+    
+    # Handle development mode with local PyPI server
+    pypi_server_proc = None
+    local_pypi_url = None
+    dev_mode = dev
+    
+    if dev_mode and workspace_root:
+        dist_dir = workspace_root / "dist"
+        if dist_dir.exists() and list(dist_dir.glob("*.whl")):
+            logger.info("Development mode: Starting local PyPI server...")
+            pypi_server_proc, port = _start_local_pypi_server(dist_dir)
+            # Use host.docker.internal to access host from Docker (Mac/Windows)
+            # For Linux, you may need to use --network=host or the host IP
+            local_pypi_url = f"http://host.docker.internal:{port}/simple/"
+            logger.info(f"Local PyPI URL: {local_pypi_url}")
+        else:
+            logger.warning(
+                "Development mode requested but no wheel files found in dist/. "
+                "Run 'uv build --wheel' in each package directory first. "
+                "Falling back to PyPI."
+            )
+            dev_mode = False
     
     try:
+        # Generate Dockerfile with correct paths and dev mode settings
+        dockerfile_content = renderer.render_dockerfile(
+            spec, 
+            agent_path=relative_agent_path,
+            dev_mode=dev_mode,
+            local_pypi_url=local_pypi_url
+        )
+        
+        # Build command
+        build_cmd = ["docker", "build", "-t", image, "-f", "-", "."]
+        if no_cache:
+            build_cmd.insert(2, "--no-cache")
+        
         result = subprocess.run(
             build_cmd,
             input=dockerfile_content.encode(),
-            cwd=".",
+            cwd=build_context,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=True
@@ -261,6 +420,10 @@ def deploy(
             f"Docker build failed for agent '{spec.agent.name}'.\n"
             f"Error: {stderr}"
         )
+    finally:
+        # Always stop the local PyPI server
+        if pypi_server_proc:
+            _stop_local_pypi_server(pypi_server_proc)
     
     return {
         "image": image,

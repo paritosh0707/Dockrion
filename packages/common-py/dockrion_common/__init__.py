@@ -38,7 +38,6 @@ from .constants import (
     API_VERSION,
     # Supported values
     SUPPORTED_FRAMEWORKS,
-    SUPPORTED_PROVIDERS,
     SUPPORTED_AUTH_MODES,
     SUPPORTED_STREAMING,
     LOG_LEVELS,
@@ -173,7 +172,6 @@ __all__ = [
     "API_VERSION",
     # Supported values
     "SUPPORTED_FRAMEWORKS",
-    "SUPPORTED_PROVIDERS",
     "SUPPORTED_AUTH_MODES",
     "SUPPORTED_STREAMING",
     "LOG_LEVELS",

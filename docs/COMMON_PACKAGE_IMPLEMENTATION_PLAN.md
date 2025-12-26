@@ -296,7 +296,6 @@ SUPPORTED_DOCKFILE_VERSIONS = ["1.0"]
 
 # Supported values (must match schema)
 SUPPORTED_FRAMEWORKS = ["langgraph", "langchain"]
-SUPPORTED_PROVIDERS = ["openai", "azure", "anthropic", "google", "ollama", "custom"]
 SUPPORTED_AUTH_MODES = ["jwt", "api_key", "oauth2"]
 SUPPORTED_STREAMING = ["sse", "websocket", "none"]
 LOG_LEVELS = ["debug", "info", "warn", "error"]
@@ -763,7 +762,6 @@ from .errors import (
 from .constants import (
     dockrion_VERSION,
     SUPPORTED_FRAMEWORKS,
-    SUPPORTED_PROVIDERS,
     SUPPORTED_AUTH_MODES,
     PERMISSIONS,
     DEFAULT_RATE_LIMIT,
@@ -809,7 +807,6 @@ __all__ = [
     # Constants
     "dockrion_VERSION",
     "SUPPORTED_FRAMEWORKS",
-    "SUPPORTED_PROVIDERS",
     "SUPPORTED_AUTH_MODES",
     "PERMISSIONS",
     "DEFAULT_RATE_LIMIT",

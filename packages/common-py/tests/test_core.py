@@ -13,7 +13,6 @@ from dockrion_common import (
     AuthError,
     # Constants
     SUPPORTED_FRAMEWORKS,
-    SUPPORTED_PROVIDERS,
     PERMISSIONS,
     # Validation
     validate_entrypoint,
@@ -61,11 +60,6 @@ class TestConstants:
         """Test SUPPORTED_FRAMEWORKS"""
         assert "langgraph" in SUPPORTED_FRAMEWORKS
         assert "langchain" in SUPPORTED_FRAMEWORKS
-    
-    def test_supported_providers(self):
-        """Test SUPPORTED_PROVIDERS"""
-        assert "openai" in SUPPORTED_PROVIDERS
-        assert "anthropic" in SUPPORTED_PROVIDERS
     
     def test_permissions(self):
         """Test PERMISSIONS"""

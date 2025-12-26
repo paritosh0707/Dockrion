@@ -46,7 +46,6 @@ All the following fields now use constants from `dockrion-common`:
 | Field | Model | Constant Used |
 |-------|-------|---------------|
 | `framework` | `AgentConfig` | `SUPPORTED_FRAMEWORKS` |
-| `provider` | `ModelConfig` | `SUPPORTED_PROVIDERS` |
 | `mode` | `AuthConfig` | `SUPPORTED_AUTH_MODES` |
 | `log_level` | `Observability` | `LOG_LEVELS` |
 | `streaming` | `ExposeConfig` | `SUPPORTED_STREAMING` |

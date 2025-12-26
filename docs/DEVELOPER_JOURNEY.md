@@ -117,7 +117,6 @@ Dockrion validate
 │    packages/common-py/dockrion_common/constants.py         │
 │                                                               │
 │    - framework in SUPPORTED_FRAMEWORKS?                      │
-│    - provider in SUPPORTED_PROVIDERS?                        │
 │    - auth.mode in SUPPORTED_AUTH_MODES?                      │
 └──────────────────────┬──────────────────────────────────────┘
                        │
@@ -834,7 +833,6 @@ log_event("invocation_complete", agent="invoice-copilot", latency_ms=234.5, stat
 
 ### 2. **constants.py** - Reference Data
 - ✓ Validation: Check `framework in SUPPORTED_FRAMEWORKS`
-- ✓ UI: Show dropdown with `SUPPORTED_PROVIDERS`
 - ✓ Auth: Validate permissions against `PERMISSIONS` list
 
 ### 3. **validation.py** - Input Validation

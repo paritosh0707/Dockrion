@@ -28,7 +28,6 @@ from typing_extensions import Self
 from dockrion_common import (
     ValidationError,
     SUPPORTED_FRAMEWORKS,
-    SUPPORTED_PROVIDERS,
     SUPPORTED_AUTH_MODES,
     SUPPORTED_STREAMING,
     LOG_LEVELS,
@@ -286,57 +285,6 @@ class AgentConfig(BaseModel):
                 )
         
         return self
-
-
-# =============================================================================
-# MODEL CONFIGURATION (Future - Phase 2)
-# =============================================================================
-
-class ModelConfig(BaseModel):
-    """
-    LLM provider and model settings.
-    
-    NOTE: This is included for future compatibility but not required in MVP.
-    Runtime can use this to configure LLM clients.
-    
-    Note: provider field uses constants from common package (SUPPORTED_PROVIDERS)
-    as the single source of truth for validation.
-    """
-    provider: str  # Validated against SUPPORTED_PROVIDERS from common
-    name: str
-    temperature: Optional[float] = None
-    max_tokens: Optional[int] = None
-    endpoint: Optional[str] = None
-    extra: Dict[str, Any] = {}
-    
-    model_config = ConfigDict(extra="allow")
-    
-    @field_validator("provider")
-    @classmethod
-    def validate_provider_supported(cls, v: str) -> str:
-        """Validate provider is supported (uses SUPPORTED_PROVIDERS from common)"""
-        if v not in SUPPORTED_PROVIDERS:
-            raise ValidationError(
-                f"Unsupported provider: '{v}'. "
-                f"Supported providers: {', '.join(SUPPORTED_PROVIDERS)}"
-            )
-        return v
-    
-    @field_validator("temperature")
-    @classmethod
-    def validate_temperature_range(cls, v: Optional[float]) -> Optional[float]:
-        """Validate temperature is in valid range [0, 2]"""
-        if v is not None and (v < 0 or v > 2):
-            raise ValidationError(f"Temperature must be between 0 and 2. Got: {v}")
-        return v
-    
-    @field_validator("max_tokens")
-    @classmethod
-    def validate_max_tokens_positive(cls, v: Optional[int]) -> Optional[int]:
-        """Validate max_tokens is positive"""
-        if v is not None and v <= 0:
-            raise ValidationError(f"max_tokens must be positive. Got: {v}")
-        return v
 
 
 # =============================================================================
@@ -896,7 +844,6 @@ class DockSpec(BaseModel):
     """
     version: Literal["1.0"]
     agent: AgentConfig
-    model: Optional[ModelConfig] = None
     io_schema: IOSchema
     arguments: Dict[str, Any] = {}
     policies: Optional[Policies] = None

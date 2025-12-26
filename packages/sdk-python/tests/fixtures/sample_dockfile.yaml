@@ -4,11 +4,6 @@ agent:
   description: "Test agent for SDK testing"
   entrypoint: tests.fixtures.mock_agent:build_agent
   framework: langgraph
-model:
-  provider: openai
-  name: gpt-4o-mini
-  temperature: 0.2
-  max_tokens: 1500
 io_schema:
   input:
     type: object

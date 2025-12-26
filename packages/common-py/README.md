@@ -175,7 +175,6 @@ except Exception as e:
 
 #### Supported Values
 - `SUPPORTED_FRAMEWORKS`: `["langgraph", "langchain"]`
-- `SUPPORTED_PROVIDERS`: `["openai", "azure", "anthropic", "google", "ollama", "custom"]`
 - `SUPPORTED_AUTH_MODES`: `["jwt", "api_key", "oauth2"]`
 - `SUPPORTED_STREAMING`: `["sse", "websocket", "none"]`
 - `LOG_LEVELS`: `["debug", "info", "warn", "error"]`

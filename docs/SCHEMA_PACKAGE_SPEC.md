@@ -63,7 +63,6 @@ Transform every Dockfile section into a validated Python object:
 
 | Model | Purpose | Status |
 |-------|---------|--------|
-| `ModelConfig` | LLM settings | **Agent-internal** - Not in Dockfile v1 |
 | `Policies` | Security rules | **Deferred** - Add when policy engine ready |
 | `AuthConfig` | Auth settings | **Deferred** - Add when auth service ready |
 | `Observability` | Telemetry | **Deferred** - Add when telemetry integrated |
@@ -173,7 +172,7 @@ dev = [
 Schema is the foundation - it depends on nothing else internal.
 
 **Future (Phase 2+):** When adding deferred models:
-- May use `common/constants.py` for `SUPPORTED_FRAMEWORKS`, `SUPPORTED_PROVIDERS` enums
+- May use `common/constants.py` for `SUPPORTED_FRAMEWORKS` enums
 - May use `common/errors.py` for base error classes (if consolidating error handling)
 
 **Current Design (Parallel Development Strategy):**

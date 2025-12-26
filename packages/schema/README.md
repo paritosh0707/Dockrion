@@ -57,7 +57,6 @@ All supported values (frameworks, providers, auth modes, etc.) are defined in `d
 # Schema imports constants from common
 from dockrion_common import (
     SUPPORTED_FRAMEWORKS,
-    SUPPORTED_PROVIDERS,
     SUPPORTED_AUTH_MODES,
     LOG_LEVELS,
     SUPPORTED_STREAMING
@@ -175,7 +174,6 @@ Root model for Dockfile v1.0 specification.
 class DockSpec(BaseModel):
     version: Literal["1.0"]
     agent: AgentConfig
-    model: Optional[ModelConfig] = None
     io_schema: IOSchema
     arguments: Dict[str, Any] = {}
     policies: Optional[Policies] = None
@@ -245,19 +243,6 @@ class Metadata(BaseModel):
 ### Advanced Models (Future - Phase 2)
 
 These models are included for future compatibility but are optional in MVP:
-
-#### ModelConfig
-LLM provider and model settings.
-
-```python
-class ModelConfig(BaseModel):
-    provider: Literal["openai", "azure", "anthropic", "google", "ollama", "custom"]
-    name: str
-    temperature: Optional[float] = None  # 0-2
-    max_tokens: Optional[int] = None  # positive
-    endpoint: Optional[str] = None
-    extra: Dict[str, Any] = {}
-```
 
 #### Policies
 Security and safety policies.

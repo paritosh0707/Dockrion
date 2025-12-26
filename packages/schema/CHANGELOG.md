@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `DockSpec` - Root specification model
   - `AgentConfig` - Agent metadata and entrypoint configuration
   - `IOSchema` and `IOSubSchema` - Input/output schema definitions
-  - `ModelConfig` - LLM provider and model settings (future)
   - `Policies` - Tool and safety policies (future)
   - `AuthConfig` - Authentication and authorization settings (future)
   - `Observability` - Telemetry and monitoring configuration (future)
@@ -23,7 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Agent name format validation (lowercase, alphanumeric, hyphens)
   - Entrypoint format and injection prevention
   - Framework validation against `SUPPORTED_FRAMEWORKS`
-  - Provider validation against `SUPPORTED_PROVIDERS`
   - Auth mode validation against `SUPPORTED_AUTH_MODES`
   - Log level validation against `LOG_LEVELS`
   - Streaming mode validation against `SUPPORTED_STREAMING`
@@ -63,7 +61,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking Change**: Replaced hardcoded `Literal` types with `str` types validated against constants
 - Changed field types to validate against `dockrion-common` constants:
   - `AgentConfig.framework`: Now `str` validated against `SUPPORTED_FRAMEWORKS`
-  - `ModelConfig.provider`: Now `str` validated against `SUPPORTED_PROVIDERS`
   - `AuthConfig.mode`: Now `str` validated against `SUPPORTED_AUTH_MODES`
   - `Observability.log_level`: Now `str` validated against `LOG_LEVELS`
   - `ExposeConfig.streaming`: Now `str` validated against `SUPPORTED_STREAMING`
@@ -80,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - This package is designed to be used by CLI, SDK, and Runtime Gateway
 - File I/O and YAML parsing are handled by consuming packages (SDK/CLI)
 - Environment variable expansion is handled by consuming packages (SDK/CLI)
-- Future models (ModelConfig, Policies, AuthConfig, Observability) are defined but optional in MVP
+- Future models (Policies, AuthConfig, Observability) are defined but optional in MVP
 
 ## [Unreleased]
 
@@ -135,7 +132,6 @@ Enhanced `IOSubSchema` with extensive validation for edge cases:
 - Includes examples for all supported patterns
 
 ### Planned for v0.2.0
-- Activate ModelConfig validation (Phase 2)
 - Activate Policies validation (Phase 2)
 - Activate AuthConfig enforcement (when Auth service is ready)
 - Activate Observability settings (when Telemetry is integrated)

@@ -11,11 +11,6 @@ agent:
   description: "{description}"
   entrypoint: app.main:build_agent
   framework: langgraph
-model:
-  provider: openai
-  name: gpt-4o-mini
-  temperature: 0.7
-  max_tokens: 1500
 io_schema:
   input:
     type: object
@@ -91,7 +86,6 @@ def init(
         console.print("\n[bold cyan]Next steps:[/bold cyan]")
         console.print("  1. Edit the Dockfile to customize your agent:")
         console.print(f"     [dim]• Set the correct entrypoint[/dim]")
-        console.print(f"     [dim]• Configure the model settings[/dim]")
         console.print(f"     [dim]• Define input/output schema[/dim]")
         console.print(f"  2. Implement your agent code")
         console.print(f"  3. Validate the Dockfile:")

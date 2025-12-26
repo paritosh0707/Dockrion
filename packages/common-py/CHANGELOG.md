@@ -58,7 +58,6 @@ This change maintains 100% backward compatibility while following Pydantic V2 be
   - Version information: `dockrion_VERSION`, `SUPPORTED_DOCKFILE_VERSIONS`, `API_VERSION`
   - Supported values:
     - `SUPPORTED_FRAMEWORKS` - Agent frameworks (langgraph, langchain)
-    - `SUPPORTED_PROVIDERS` - LLM providers (openai, azure, anthropic, google, ollama, custom)
     - `SUPPORTED_AUTH_MODES` - Auth modes (jwt, api_key, oauth2)
     - `SUPPORTED_STREAMING` - Streaming modes (sse, websocket, none)
     - `LOG_LEVELS` - Log levels (debug, info, warn, error)

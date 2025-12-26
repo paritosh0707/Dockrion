@@ -4,12 +4,6 @@ agent:
   description: "Extracts fields from invoices and returns a normalized JSON summary."
   entrypoint: examples.invoice_copilot.app.graph:build_graph
   framework: langgraph
-model:
-  provider: openai
-  name: gpt-4o-mini
-  temperature: 0.2
-  max_tokens: 1500
-  extra: { response_format: "json_object" }
 io_schema:
   input:
     type: object

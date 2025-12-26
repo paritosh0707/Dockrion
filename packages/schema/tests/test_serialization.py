@@ -51,12 +51,6 @@ def full_spec_data():
             "entrypoint": "examples.invoice_copilot.app.graph:build_graph",
             "framework": "langgraph"
         },
-        "model": {
-            "provider": "openai",
-            "name": "gpt-4o-mini",
-            "temperature": 0.7,
-            "max_tokens": 1500
-        },
         "io_schema": {
             "input": {
                 "type": "object",
@@ -135,7 +129,6 @@ class TestToDict:
         assert isinstance(result, dict)
         assert result["version"] == "1.0"
         assert result["agent"]["name"] == "invoice-copilot"
-        assert result["model"]["provider"] == "openai"
         assert result["policies"]["tools"]["allowed"] == ["extract_invoice"]
         assert result["metadata"]["maintainer"] == "alice@example.com"
     
@@ -144,7 +137,6 @@ class TestToDict:
         result = to_dict(minimal_spec, exclude_none=True)
         
         # None fields should be excluded
-        assert "model" not in result or result["model"] is None
         assert "description" not in result["agent"]
     
     def test_to_dict_exclude_none_false(self, minimal_spec):
@@ -163,7 +155,6 @@ class TestToDict:
         assert isinstance(result["agent"]["name"], str)
         assert isinstance(result["expose"]["port"], int)
         assert isinstance(result["expose"]["rest"], bool)
-        assert isinstance(result["model"]["temperature"], float)
         assert isinstance(result["metadata"]["tags"], list)
         assert isinstance(result["arguments"], dict)
 
@@ -191,7 +182,6 @@ class TestFromDict:
         assert isinstance(spec, DockSpec)
         assert spec.version == "1.0"
         assert spec.agent.name == "invoice-copilot"
-        assert spec.model.provider == "openai"
         assert spec.metadata.maintainer == "alice@example.com"
     
     def test_from_dict_validation_error(self):
@@ -328,7 +318,6 @@ class TestRoundTrip:
         # All fields should match
         assert result_data["version"] == full_spec_data["version"]
         assert result_data["agent"]["name"] == full_spec_data["agent"]["name"]
-        assert result_data["model"]["provider"] == full_spec_data["model"]["provider"]
         assert result_data["metadata"]["maintainer"] == full_spec_data["metadata"]["maintainer"]
     
     def test_dict_to_spec_to_yaml_to_dict(self, full_spec_data):

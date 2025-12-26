@@ -240,53 +240,7 @@ The schema package implements extensive validation to catch configuration errors
 
 ---
 
-## 3. Model Configuration Validation
-
-### Handled Edge Cases
-
-#### 3.1 Provider Validation
-
-**Rule**: Must be in `SUPPORTED_PROVIDERS` from common
-
-```python
-# ✅ Valid
-"openai", "azure", "anthropic", "google", "ollama", "custom"
-
-# ❌ Invalid
-"unknown_provider"
-# Error: "Unsupported provider: 'unknown_provider'"
-```
-
-#### 3.2 Temperature Range
-
-**Rule**: Must be between 0 and 2
-
-```python
-# ✅ Valid
-0.0, 0.7, 1.5, 2.0
-
-# ❌ Invalid
--0.5  # Too low
-3.0   # Too high
-# Error: "Temperature must be between 0 and 2"
-```
-
-#### 3.3 Max Tokens
-
-**Rule**: Must be positive integer
-
-```python
-# ✅ Valid
-1000, 4096
-
-# ❌ Invalid
-0, -100
-# Error: "max_tokens must be positive"
-```
-
----
-
-## 4. Expose Configuration Validation
+## 3. Expose Configuration Validation
 
 ### Handled Edge Cases
 
@@ -334,7 +288,7 @@ The schema package implements extensive validation to catch configuration errors
 
 ---
 
-## 5. Authentication Configuration Validation
+## 4. Authentication Configuration Validation
 
 ### Handled Edge Cases
 
@@ -394,7 +348,7 @@ The schema package implements extensive validation to catch configuration errors
 
 ---
 
-## 6. Policies Validation
+## 5. Policies Validation
 
 ### Handled Edge Cases
 
@@ -413,7 +367,7 @@ The schema package implements extensive validation to catch configuration errors
 
 ---
 
-## 7. Observability Configuration Validation
+## 6. Observability Configuration Validation
 
 ### Handled Edge Cases
 
@@ -432,7 +386,7 @@ The schema package implements extensive validation to catch configuration errors
 
 ---
 
-## 8. DockSpec Version Validation
+## 7. DockSpec Version Validation
 
 ### Handled Edge Cases
 
@@ -451,7 +405,7 @@ The schema package implements extensive validation to catch configuration errors
 
 ---
 
-## 9. General Validation Patterns
+## 8. General Validation Patterns
 
 ### 9.1 Extra Fields Handling
 
@@ -497,7 +451,7 @@ The schema package implements extensive validation to catch configuration errors
 
 ---
 
-## 10. Security Considerations
+## 9. Security Considerations
 
 ### 10.1 Code Injection Prevention
 

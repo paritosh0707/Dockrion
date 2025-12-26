@@ -17,7 +17,6 @@ from dockrion_schema import (
     IOSubSchema,
     ExposeConfig,
     Metadata,
-    ModelConfig,
     Policies,
     ToolPolicy,
     SafetyPolicy,
@@ -60,12 +59,6 @@ def full_valid_dockfile():
             "description": "Extracts data from invoices",
             "entrypoint": "examples.invoice_copilot.app.graph:build_graph",
             "framework": "langgraph"
-        },
-        "model": {
-            "provider": "openai",
-            "name": "gpt-4o-mini",
-            "temperature": 0.7,
-            "max_tokens": 1500
         },
         "io_schema": {
             "input": {
@@ -164,7 +157,6 @@ class TestDockSpec:
         spec = DockSpec.model_validate(full_valid_dockfile)
         assert spec.version == "1.0"
         assert spec.agent.name == "invoice-copilot"
-        assert spec.model.provider == "openai"
         assert spec.policies.tools.allowed == ["extract_invoice", "summarize"]
         assert spec.auth.mode == "api_key"
         assert spec.observability.log_level == "info"
@@ -338,71 +330,6 @@ class TestAgentConfig:
         with pytest.raises(Exception) as exc_info:
             AgentConfig.model_validate(data)
         assert "literal_error" in str(exc_info.value) or "langgraph" in str(exc_info.value)
-
-
-# =============================================================================
-# MODEL CONFIG VALIDATION TESTS
-# =============================================================================
-
-class TestModelConfig:
-    """Tests for ModelConfig model"""
-    
-    def test_valid_model_config(self):
-        """Test valid model configuration"""
-        data = {
-            "provider": "openai",
-            "name": "gpt-4o-mini",
-            "temperature": 0.7,
-            "max_tokens": 1500
-        }
-        model = ModelConfig.model_validate(data)
-        assert model.provider == "openai"
-        assert model.name == "gpt-4o-mini"
-        assert model.temperature == 0.7
-        assert model.max_tokens == 1500
-    
-    def test_provider_validation_valid(self):
-        """Test valid providers"""
-        providers = ["openai", "azure", "anthropic", "google", "ollama", "custom"]
-        for provider in providers:
-            data = {"provider": provider, "name": "test-model"}
-            model = ModelConfig.model_validate(data)
-            assert model.provider == provider
-    
-    def test_provider_validation_invalid(self):
-        """Test unsupported provider"""
-        data = {"provider": "unsupported", "name": "test"}
-        # Pydantic Literal validation catches this before our validator
-        with pytest.raises(Exception) as exc_info:
-            ModelConfig.model_validate(data)
-        assert "literal_error" in str(exc_info.value) or "openai" in str(exc_info.value)
-    
-    def test_temperature_range_validation(self):
-        """Test temperature range validation"""
-        # Valid temperatures
-        for temp in [0, 0.5, 1.0, 1.5, 2.0]:
-            data = {"provider": "openai", "name": "gpt-4", "temperature": temp}
-            model = ModelConfig.model_validate(data)
-            assert model.temperature == temp
-        
-        # Invalid temperatures
-        for temp in [-0.1, 2.1, 3.0]:
-            data = {"provider": "openai", "name": "gpt-4", "temperature": temp}
-            with pytest.raises(ValidationError):
-                ModelConfig.model_validate(data)
-    
-    def test_max_tokens_validation(self):
-        """Test max_tokens validation"""
-        # Valid
-        data = {"provider": "openai", "name": "gpt-4", "max_tokens": 1000}
-        model = ModelConfig.model_validate(data)
-        assert model.max_tokens == 1000
-        
-        # Invalid (non-positive)
-        for tokens in [0, -1, -100]:
-            data = {"provider": "openai", "name": "gpt-4", "max_tokens": tokens}
-            with pytest.raises(ValidationError):
-                ModelConfig.model_validate(data)
 
 
 # =============================================================================
@@ -642,11 +569,9 @@ class TestEdgeCases:
     def test_none_optional_fields(self, minimal_valid_dockfile):
         """Test with None for optional fields"""
         minimal_valid_dockfile["metadata"] = None
-        minimal_valid_dockfile["model"] = None
         
         spec = DockSpec.model_validate(minimal_valid_dockfile)
         assert spec.metadata is None
-        assert spec.model is None
     
     def test_empty_lists(self):
         """Test with empty lists"""

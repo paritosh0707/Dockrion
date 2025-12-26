@@ -14,11 +14,6 @@ agent:
   description: "Test agent for SDK testing"
   entrypoint: tests.fixtures.mock_agent:build_agent
   framework: langgraph
-model:
-  provider: openai
-  name: gpt-4o-mini
-  temperature: 0.2
-  max_tokens: 1500
 io_schema:
   input:
     type: object
@@ -47,8 +42,7 @@ agent:
   entrypoint: invalid:entrypoint
   framework: langgraph
   invalid_indentation
-model:
-  provider: openai
+io_schema: {}
 """
     dockfile_path = tmp_path / "invalid.yaml"
     dockfile_path.write_text(invalid_content)
@@ -64,9 +58,6 @@ agent:
   name: test-agent
   entrypoint: tests.fixtures.mock_agent:build_agent
   framework: langgraph
-model:
-  provider: openai
-  name: ${MODEL_NAME:-gpt-4o-mini}
 io_schema:
   input:
     type: object
@@ -89,7 +80,6 @@ expose:
 def set_env_vars():
     """Set test environment variables."""
     original_env = os.environ.copy()
-    os.environ["MODEL_NAME"] = "test-model"
     os.environ["OPENAI_API_KEY"] = "test-key-123"
     yield
     # Restore original environment

@@ -33,7 +33,6 @@ Public API:
     - IOSchema, IOSubSchema: Input/output schema definitions
     - ExposeConfig: API exposure configuration
     - Metadata: Optional descriptive metadata
-    - ModelConfig: LLM configuration (optional)
     - Policies: Security policies (optional)
     - AuthConfig: Authentication configuration (optional)
     - Observability: Telemetry configuration (optional)
@@ -62,7 +61,6 @@ from .dockfile_v1 import (
 
 # Models - Advanced (Future - Phase 2)
 from .dockfile_v1 import (
-    ModelConfig,
     Policies,
     ToolPolicy,
     SafetyPolicy,
@@ -103,7 +101,6 @@ __all__ = [
     "SecretDefinition",
     "SecretsConfig",
     # Advanced Models (Future)
-    "ModelConfig",
     "Policies",
     "ToolPolicy",
     "SafetyPolicy",

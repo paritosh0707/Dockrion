@@ -35,16 +35,6 @@ SUPPORTED_FRAMEWORKS = ["langgraph", "langchain", "custom"]
 HANDLER_PATTERN = r"^[\w\.]+:\w+$"
 """Regex pattern for valid handler format (module:callable)"""
 
-SUPPORTED_PROVIDERS = [
-    "openai",
-    "azure",
-    "anthropic",
-    "google",
-    "ollama",
-    "custom"
-]
-"""LLM providers supported by dockrion"""
-
 SUPPORTED_AUTH_MODES = ["none", "api_key", "jwt", "oauth2"]
 """Authentication modes supported by dockrion (none = disabled)"""
 

@@ -150,7 +150,6 @@ class TemplateContext:
             
             # Flattened spec sections for easy template access
             "agent": spec_dict.get("agent", {}),
-            "model": spec_dict.get("model"),
             "io_schema": spec_dict.get("io_schema"),
             "arguments": spec_dict.get("arguments"),
             "policies": spec_dict.get("policies"),
@@ -207,12 +206,6 @@ class TemplateContext:
             List of pip package specifiers
         """
         deps = []
-        
-        # Check for extra dependencies in model config
-        if self.spec.model and hasattr(self.spec.model, 'extra'):
-            extra = self.spec.model.extra
-            if isinstance(extra, dict) and 'dependencies' in extra:
-                deps.extend(extra['dependencies'])
         
         # Check for dependencies in arguments
         if self.spec.arguments and hasattr(self.spec.arguments, 'extra'):
@@ -352,7 +345,10 @@ class TemplateRenderer:
     def render_dockerfile(
         self,
         spec: DockSpec,
-        extra_context: Optional[Dict[str, Any]] = None
+        extra_context: Optional[Dict[str, Any]] = None,
+        agent_path: str = ".",
+        dev_mode: bool = False,
+        local_pypi_url: Optional[str] = None
     ) -> str:
         """
         Render the Dockerfile.
@@ -360,12 +356,21 @@ class TemplateRenderer:
         Args:
             spec: Agent specification
             extra_context: Additional template variables
+            agent_path: Relative path from build context to agent directory
+            dev_mode: If True, use local PyPI server for Dockrion packages
+            local_pypi_url: URL to local PyPI server (for dev mode)
             
         Returns:
             Dockerfile content
         """
         ctx_builder = TemplateContext(spec)
         context = ctx_builder.build(extra_context)
+        
+        # Add agent_path to context for Dockerfile template
+        context["agent_path"] = agent_path
+        # Add dev mode settings
+        context["dev_mode"] = dev_mode
+        context["local_pypi_url"] = local_pypi_url
         
         template_file = TEMPLATE_FILES["dockerfile"]
         logger.info(f"Rendering Dockerfile from template: {template_file}")

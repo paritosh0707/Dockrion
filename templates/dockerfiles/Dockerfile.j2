@@ -52,22 +52,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PATH="/root/.local/bin:$PATH"
 
 # Copy requirements first (for better caching)
-COPY .dockrion_runtime/requirements.txt /build/requirements.txt
+COPY {{ agent_path | default('.') }}/.dockrion_runtime/requirements.txt /build/requirements.txt
 
 # Install Python dependencies
 RUN uv pip install --system --no-cache -r /build/requirements.txt
 
-# Copy and install Dockrion packages
-COPY packages/common-py/ /dockrion_packages/common-py/
-COPY packages/schema/ /dockrion_packages/schema/
-COPY packages/adapters/ /dockrion_packages/adapters/
-COPY packages/runtime/ /dockrion_packages/runtime/
-
+# Install Dockrion packages
+{% if dev_mode and local_pypi_url -%}
+# Development mode: Install from local PyPI server
 RUN uv pip install --system --no-cache \
-    -e /dockrion_packages/common-py \
-    -e /dockrion_packages/schema \
-    -e /dockrion_packages/adapters \
-    -e /dockrion_packages/runtime
+    --extra-index-url {{ local_pypi_url }} \
+    dockrion-common \
+    dockrion-schema \
+    dockrion-adapters \
+    dockrion-runtime
+{% else -%}
+# Production mode: Install from PyPI
+RUN uv pip install --system --no-cache \
+    dockrion-common \
+    dockrion-schema \
+    dockrion-adapters \
+    dockrion-runtime
+{% endif %}
 
 # -----------------------------------------------------------------------------
 # Runtime Stage - Minimal production image
@@ -81,26 +87,25 @@ RUN groupadd --gid 1000 dockrion \
     && useradd --uid 1000 --gid dockrion --shell /bin/bash --create-home dockrion
 
 # Copy installed packages from builder
-COPY --from=builder /usr/local/lib/python{{ python_version | default('3.12') | regex_replace('\\.[0-9]+$', '') }}/site-packages /usr/local/lib/python{{ python_version | default('3.12') | regex_replace('\\.[0-9]+$', '') }}/site-packages
-COPY --from=builder /dockrion_packages /dockrion_packages
+COPY --from=builder /usr/local/lib/python{{ python_version | default('3.12') }}/site-packages /usr/local/lib/python{{ python_version | default('3.12') }}/site-packages
 
-{%- if agent_directories %}
+{% if agent_directories -%}
 # Copy agent code directories
-{%- for dir in agent_directories %}
-COPY {{ dir }}/ /app/{{ dir }}/
-{%- endfor %}
-{%- else %}
+{% for dir in agent_directories -%}
+COPY {{ agent_path | default('.') }}/{{ dir }}/ /app/{{ dir }}/
+{% endfor -%}
+{% else -%}
 # Copy agent code (auto-detected from entrypoint)
-{%- set module_parts = agent.entrypoint.split(':')[0].split('.') %}
-{%- set agent_dir = module_parts[0] %}
-COPY {{ agent_dir }}/ /app/{{ agent_dir }}/
-{%- endif %}
+{% set module_parts = agent.entrypoint.split(':')[0].split('.') -%}
+{% set agent_dir = module_parts[0] -%}
+COPY {{ agent_path | default('.') }}/{{ agent_dir }}/ /app/{{ agent_dir }}/
+{% endif -%}
 
 # Copy Dockfile for runtime reference
-COPY Dockfile.yaml /app/Dockfile.yaml
+COPY {{ agent_path | default('.') }}/Dockfile.yaml /app/Dockfile.yaml
 
 # Copy generated runtime
-COPY .dockrion_runtime/main.py /app/main.py
+COPY {{ agent_path | default('.') }}/.dockrion_runtime/main.py /app/main.py
 
 # Set ownership
 RUN chown -R dockrion:dockrion /app
@@ -120,11 +125,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:{{ expose.port | default(8080) if expose else 8080 }}/health')" || exit 1
 
 # Environment variables for runtime
-{%- if model %}
-ENV MODEL_PROVIDER="{{ model.provider | default('openai') }}" \
-    MODEL_NAME="{{ model.name | default('gpt-4o-mini') }}"
-{%- endif %}
-
 {%- if auth and auth.mode == 'api_key' %}
 # Auth is enabled - API key must be provided at runtime
 ENV DOCKRION_AUTH_ENABLED="true"

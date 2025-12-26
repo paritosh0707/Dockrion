@@ -19,9 +19,6 @@ agent:
   description: "Test agent for CLI testing"
   entrypoint: tests.mock_agent:build_agent
   framework: langgraph
-model:
-  provider: openai
-  name: gpt-4o-mini
 io_schema:
   input:
     type: object
