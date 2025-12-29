@@ -70,7 +70,8 @@ jobs:
           dockrion validate --help
           dockrion test --help
           dockrion init --help
-          dockrion info --help
+          dockrion version
+          dockrion doctor || true  # May report warnings
       
       - name: Run CLI tests
         if: runner.os != 'Windows'
