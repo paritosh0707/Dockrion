@@ -1,8 +1,20 @@
+"""
+Validation Module
+=================
+
+Provides comprehensive Dockfile validation:
+- Schema validation
+- Entrypoint/handler format validation
+- Configuration warnings
+"""
+
 from typing import Dict, List, Optional, Any
+
 from dockrion_schema.dockfile_v1 import DockSpec
 from dockrion_common.errors import ValidationError
 from dockrion_common.validation import validate_entrypoint
-from .client import load_dockspec
+
+from .loader import load_dockspec
 
 
 def validate_dockspec(path: str) -> Dict[str, Any]:
@@ -78,12 +90,6 @@ def validate_dockspec(path: str) -> Dict[str, Any]:
             errors.append(f"Invalid handler format: {str(e)}")
     
     # Check for potential issues (warnings)
-    if spec.model and spec.model.temperature and spec.model.temperature > 1.0:
-        warnings.append(
-            f"High temperature value ({spec.model.temperature}). "
-            "This may lead to inconsistent responses."
-        )
-    
     if spec.arguments and isinstance(spec.arguments, dict):
         timeout_sec = spec.arguments.get("timeout_sec")
         if timeout_sec is not None:
@@ -138,3 +144,10 @@ def validate(path: str) -> dict:
     if not result["valid"]:
         raise ValidationError(result["errors"][0] if result["errors"] else "Validation failed")
     return {"valid": True}
+
+
+__all__ = [
+    "validate_dockspec",
+    "validate",
+]
+

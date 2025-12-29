@@ -3,7 +3,8 @@ name = "dockrion-cli"
 version = "0.1.0"
 description = "Command-line interface for Dockrion - Deploy and manage AI agents"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
 authors = [
     {name = "Dockrion Team"}
 ]
@@ -12,25 +13,69 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 dependencies = [
     "typer>=0.12.0",
     "rich>=13.7.0",
-    "dockrion-sdk>=0.1.0"
+    "dockrion-sdk>=0.1.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
-    "pytest-mock>=3.11.0"
+    "pytest-mock>=3.11.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+]
+
+test = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
 ]
 
 [project.scripts]
 dockrion = "dockrion_cli.main:app"
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dockrion_cli*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+pythonpath = ["."]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+[tool.coverage.run]
+source = ["dockrion_cli"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4"]
+ignore = ["E501"]

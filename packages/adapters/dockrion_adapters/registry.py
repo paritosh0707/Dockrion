@@ -28,7 +28,7 @@ Usage:
     result = adapter.invoke(payload)
 """
 
-from typing import Dict, Type
+from typing import Dict, Type, Any
 from dockrion_common import ValidationError, get_logger
 
 from .base import AgentAdapter
@@ -197,7 +197,7 @@ def is_framework_supported(framework: str) -> bool:
     return framework.lower().strip() in _ADAPTER_REGISTRY
 
 
-def get_adapter_info(framework: str) -> Dict[str, any]:
+def get_adapter_info(framework: str) -> Dict[str, Any]:
     """
     Get information about an adapter without instantiating it.
     

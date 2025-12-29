@@ -8,12 +8,12 @@ This package provides:
 - Constants for supported values and defaults (namespaced)
 - Validation utilities for input checking
 - Authentication utilities for API key management
-- HTTP response models for consistent API responses
+- Pydantic HTTP response models for FastAPI
 
 Usage:
     from dockrion_common import ValidationError, SupportedValues
     from dockrion_common import validate_entrypoint, generate_api_key
-    from dockrion_common import error_response, health_response
+    from dockrion_common import HealthResponse, InvokeResponse, ErrorResponse
     
     # Namespaced constants (recommended)
     from dockrion_common import RuntimeDefaults, Timeouts, Patterns
@@ -83,7 +83,7 @@ from .auth_utils import (
     verify_api_key_format,
 )
 
-# HTTP models
+# HTTP models (Pydantic response models for FastAPI)
 from .http_models import (
     ErrorResponse,
     PaginatedResponse,
@@ -92,13 +92,6 @@ from .http_models import (
     ReadyResponse,
     SchemaResponse,
     InfoResponse,
-    error_response,
-    paginated_response,
-    health_response,
-    invoke_response,
-    ready_response,
-    schema_response,
-    info_response,
 )
 
 # Logger
@@ -178,7 +171,7 @@ __all__ = [
     "check_any_permission",
     "check_all_permissions",
     "verify_api_key_format",
-    # HTTP Models
+    # HTTP Models (Pydantic response models for FastAPI)
     "ErrorResponse",
     "PaginatedResponse",
     "HealthResponse",
@@ -186,13 +179,6 @@ __all__ = [
     "ReadyResponse",
     "SchemaResponse",
     "InfoResponse",
-    "error_response",
-    "paginated_response",
-    "health_response",
-    "invoke_response",
-    "ready_response",
-    "schema_response",
-    "info_response",
     # Logger
     "DockrionLogger",
     "get_logger",

@@ -1,6 +1,15 @@
-import os
+"""
+Log Management Module
+=====================
+
+Provides functionality for retrieving and streaming agent logs:
+- Local log retrieval
+- Build log streaming
+- Real-time agent log streaming
+"""
+
 from pathlib import Path
-from typing import List, Optional, Generator
+from typing import List, Generator
 
 
 def get_local_logs(agent_name: str, lines: int = 100) -> List[str]:
@@ -86,3 +95,11 @@ def stream_agent_logs(agent_name: str, follow: bool = False) -> Generator[str, N
         # V1: Not implemented, just return
         # V1.1+: Will use file watching or Controller streaming
         yield "[Follow mode not supported in V1]"
+
+
+__all__ = [
+    "get_local_logs",
+    "tail_build_logs",
+    "stream_agent_logs",
+]
+

@@ -132,6 +132,7 @@ class LangGraphAdapter:
             from langgraph.pregel import Pregel
             
             # Try to import CompiledStateGraph (newer LangGraph versions)
+            valid_types: tuple[type, ...]
             try:
                 from langgraph.graph.state import CompiledStateGraph
                 valid_types = (Pregel, CompiledStateGraph)

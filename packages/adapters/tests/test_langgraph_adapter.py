@@ -8,8 +8,15 @@ Comprehensive test coverage for:
 - Health checks
 - Error handling
 """
-
+import sys
+from pathlib import Path
 import pytest
+
+# Ensure tests directory is in path for fixture imports
+tests_dir = Path(__file__).parent
+if str(tests_dir) not in sys.path:
+    sys.path.insert(0, str(tests_dir))
+
 from dockrion_adapters import LangGraphAdapter
 from dockrion_adapters.errors import (
     AdapterLoadError,
@@ -32,15 +39,15 @@ class TestLoading:
     def test_load_simple_agent(self):
         """Test loading valid simple agent"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         assert adapter._runner is not None
-        assert adapter._entrypoint == "tests.fixtures.sample_agents:build_simple_agent"
+        assert adapter._entrypoint == "fixtures.sample_agents:build_simple_agent"
     
     def test_load_echo_agent(self):
         """Test loading echo agent"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_echo_agent")
+        adapter.load("fixtures.sample_agents:build_echo_agent")
         
         assert adapter._runner is not None
         metadata = adapter.get_metadata()
@@ -61,7 +68,7 @@ class TestLoading:
         adapter = LangGraphAdapter()
         
         with pytest.raises(CallableNotFoundError) as exc:
-            adapter.load("tests.fixtures.sample_agents:nonexistent_function")
+            adapter.load("fixtures.sample_agents:nonexistent_function")
         
         assert "nonexistent_function" in str(exc.value)
         assert "no function" in str(exc.value).lower()
@@ -83,7 +90,7 @@ class TestLoading:
         adapter = LangGraphAdapter()
         
         with pytest.raises(AdapterLoadError) as exc:
-            adapter.load("tests.fixtures.sample_agents:build_failing_factory")
+            adapter.load("fixtures.sample_agents:build_failing_factory")
         
         assert "failed" in str(exc.value).lower()
     
@@ -92,7 +99,7 @@ class TestLoading:
         adapter = LangGraphAdapter()
         
         with pytest.raises(InvalidAgentError) as exc:
-            adapter.load("tests.fixtures.sample_agents:build_agent_without_invoke")
+            adapter.load("fixtures.sample_agents:build_agent_without_invoke")
         
         assert "invoke" in str(exc.value).lower()
         assert "method" in str(exc.value).lower()
@@ -100,7 +107,7 @@ class TestLoading:
     def test_load_detects_streaming_support(self):
         """Test detection of streaming capability"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_streaming_agent")
+        adapter.load("fixtures.sample_agents:build_streaming_agent")
         
         assert adapter._supports_streaming is True
         metadata = adapter.get_metadata()
@@ -109,7 +116,7 @@ class TestLoading:
     def test_load_detects_async_support(self):
         """Test detection of async capability"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_async_agent")
+        adapter.load("fixtures.sample_agents:build_async_agent")
         
         assert adapter._supports_async is True
         metadata = adapter.get_metadata()
@@ -126,7 +133,7 @@ class TestInvocation:
     def test_invoke_simple_agent(self):
         """Test successful invocation"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         result = adapter.invoke({"input": "test data"})
         
@@ -137,7 +144,7 @@ class TestInvocation:
     def test_invoke_echo_agent(self):
         """Test invocation returns correct output"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_echo_agent")
+        adapter.load("fixtures.sample_agents:build_echo_agent")
         
         payload = {"query": "hello", "user": "alice"}
         result = adapter.invoke(payload)
@@ -158,7 +165,7 @@ class TestInvocation:
     def test_invoke_agent_crashes(self):
         """Test error when agent crashes during invocation"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_crashing_agent")
+        adapter.load("fixtures.sample_agents:build_crashing_agent")
         
         with pytest.raises(AgentExecutionError) as exc:
             adapter.invoke({"input": "test"})
@@ -168,7 +175,7 @@ class TestInvocation:
     def test_invoke_invalid_output_type(self):
         """Test error when agent returns non-dict"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_invalid_output_agent")
+        adapter.load("fixtures.sample_agents:build_invalid_output_agent")
         
         with pytest.raises(InvalidOutputError) as exc:
             adapter.invoke({"input": "test"})
@@ -179,7 +186,7 @@ class TestInvocation:
     def test_invoke_multiple_times(self):
         """Test multiple invocations work"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         # First invocation
         result1 = adapter.invoke({"input": "first"})
@@ -195,7 +202,7 @@ class TestInvocation:
     def test_invoke_with_empty_payload(self):
         """Test invocation with empty dict"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         result = adapter.invoke({})
         
@@ -223,20 +230,20 @@ class TestMetadata:
     def test_metadata_after_load(self):
         """Test metadata after loading agent"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         metadata = adapter.get_metadata()
         
         assert metadata["framework"] == "langgraph"
         assert metadata["loaded"] is True
         assert metadata["agent_type"] == "SimpleAgent"
-        assert metadata["entrypoint"] == "tests.fixtures.sample_agents:build_simple_agent"
+        assert metadata["entrypoint"] == "fixtures.sample_agents:build_simple_agent"
         assert "adapter_version" in metadata
     
     def test_metadata_includes_capabilities(self):
         """Test metadata includes capability flags"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_streaming_agent")
+        adapter.load("fixtures.sample_agents:build_streaming_agent")
         
         metadata = adapter.get_metadata()
         
@@ -260,7 +267,7 @@ class TestHealthCheck:
     def test_health_check_after_load(self):
         """Test health check passes after loading"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         # Health check should pass
         assert adapter.health_check() is True
@@ -268,7 +275,7 @@ class TestHealthCheck:
     def test_health_check_with_crashing_agent(self):
         """Test health check fails for crashing agent"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_crashing_agent")
+        adapter.load("fixtures.sample_agents:build_crashing_agent")
         
         # Health check should fail
         assert adapter.health_check() is False
@@ -290,7 +297,7 @@ class TestIntegration:
         assert adapter.get_metadata()["loaded"] is False
         
         # 3. Load agent
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         # 4. Check loaded state
         assert adapter.get_metadata()["loaded"] is True
@@ -309,12 +316,12 @@ class TestIntegration:
         adapter = LangGraphAdapter()
         
         # Load first agent
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         result1 = adapter.invoke({"input": "test"})
         assert "output" in result1
         
         # Load second agent (replaces first)
-        adapter.load("tests.fixtures.sample_agents:build_echo_agent")
+        adapter.load("fixtures.sample_agents:build_echo_agent")
         result2 = adapter.invoke({"input": "test"})
         assert "echo" in result2
         
@@ -332,7 +339,7 @@ class TestConfigParameter:
     def test_invoke_with_config(self):
         """Test invocation with config parameter"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_config_agent")
+        adapter.load("fixtures.sample_agents:build_config_agent")
         
         # Invoke with config
         result = adapter.invoke(
@@ -347,7 +354,7 @@ class TestConfigParameter:
     def test_invoke_without_config(self):
         """Test invocation without config (backward compatible)"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_config_agent")
+        adapter.load("fixtures.sample_agents:build_config_agent")
         
         # Invoke without config
         result = adapter.invoke({"input": "test"})
@@ -357,7 +364,7 @@ class TestConfigParameter:
     def test_config_support_detection(self):
         """Test adapter detects config support"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_config_agent")
+        adapter.load("fixtures.sample_agents:build_config_agent")
         
         metadata = adapter.get_metadata()
         assert metadata["supports_config"] is True
@@ -365,7 +372,7 @@ class TestConfigParameter:
     def test_config_with_non_supporting_agent(self):
         """Test config gracefully ignored for agents without config support"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         # Metadata should show no config support
         metadata = adapter.get_metadata()
@@ -381,7 +388,7 @@ class TestConfigParameter:
     def test_stateful_agent_with_config(self):
         """Test stateful agent maintains state across invocations"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_stateful_agent")
+        adapter.load("fixtures.sample_agents:build_stateful_agent")
         
         # First invocation
         result1 = adapter.invoke(
@@ -428,16 +435,20 @@ class TestStrictValidation:
         assert metadata["strict_validation"] is False
     
     def test_strict_validation_with_mock_agent(self):
-        """Test strict validation fails gracefully when langgraph not installed"""
+        """Test strict validation fails with mock agent when langgraph is installed"""
         adapter = LangGraphAdapter(strict_validation=True)
         
-        # Load mock agent (not real LangGraph)
-        # Should fall back to duck typing when langgraph not installed
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
-        
-        # Should still work
-        result = adapter.invoke({"input": "test"})
-        assert "output" in result
+        # When langgraph is installed, strict validation should reject mock agents
+        # that aren't actual LangGraph compiled graphs
+        try:
+            adapter.load("fixtures.sample_agents:build_simple_agent")
+            # If we get here, langgraph isn't installed or validation passed
+            result = adapter.invoke({"input": "test"})
+            assert "output" in result
+        except InvalidAgentError as e:
+            # Expected when langgraph is installed - mock agent fails type check
+            assert "strict validation" in str(e).lower()
+            assert "langgraph" in str(e).lower()
 
 
 # =============================================================================
@@ -450,7 +461,7 @@ class TestMetadataExtended:
     def test_metadata_includes_agent_module(self):
         """Test metadata includes agent module path"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         metadata = adapter.get_metadata()
         assert "agent_module" in metadata
@@ -459,7 +470,7 @@ class TestMetadataExtended:
     def test_metadata_includes_supports_config(self):
         """Test metadata includes config support flag"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_config_agent")
+        adapter.load("fixtures.sample_agents:build_config_agent")
         
         metadata = adapter.get_metadata()
         assert "supports_config" in metadata
@@ -468,7 +479,7 @@ class TestMetadataExtended:
     def test_metadata_includes_is_langgraph_type(self):
         """Test metadata includes langgraph type check"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         metadata = adapter.get_metadata()
         assert "is_langgraph_type" in metadata
@@ -495,14 +506,14 @@ class TestSignatureValidation:
     def test_signature_validation_detects_config_support(self):
         """Test signature validation correctly detects config parameter"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_config_agent")
+        adapter.load("fixtures.sample_agents:build_config_agent")
         
         assert adapter._supports_config is True
     
     def test_signature_validation_no_config_support(self):
         """Test signature validation detects no config support"""
         adapter = LangGraphAdapter()
-        adapter.load("tests.fixtures.sample_agents:build_simple_agent")
+        adapter.load("fixtures.sample_agents:build_simple_agent")
         
         # Simple agent has no config parameter
         assert adapter._supports_config is False
@@ -529,7 +540,7 @@ class TestErrorMessages:
         adapter = LangGraphAdapter()
         
         try:
-            adapter.load("tests.fixtures.sample_agents:nonexistent")
+            adapter.load("fixtures.sample_agents:nonexistent")
         except CallableNotFoundError as e:
             assert "check" in str(e).lower() or "available" in str(e).lower()
     
@@ -538,7 +549,7 @@ class TestErrorMessages:
         adapter = LangGraphAdapter()
         
         try:
-            adapter.load("tests.fixtures.sample_agents:build_agent_without_invoke")
+            adapter.load("fixtures.sample_agents:build_agent_without_invoke")
         except InvalidAgentError as e:
             assert "hint" in str(e).lower() or "ensure" in str(e).lower()
     

@@ -1,7 +1,71 @@
-"""Pytest configuration and fixtures for SDK tests."""
+"""Pytest configuration and fixtures for SDK tests.
+
+This conftest.py ensures tests work for both developers (editable install)
+and users (pip installed package).
+"""
 import os
+import sys
 import pytest
 from pathlib import Path
+
+
+def pytest_configure(config):
+    """Configure pytest with custom markers and path setup."""
+    config.addinivalue_line(
+        "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+    )
+    config.addinivalue_line(
+        "markers", "integration: marks tests as integration tests"
+    )
+    config.addinivalue_line(
+        "markers", "requires_docker: marks tests that require docker"
+    )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_path():
+    """Ensure the package root and tests directory are in the Python path.
+    
+    This makes fixtures importable whether tests are run from:
+    - The package directory (packages/sdk-python)
+    - The project root (Dockrion)
+    - Or after pip install
+    """
+    package_root = Path(__file__).parent.parent
+    tests_root = Path(__file__).parent
+    
+    # Add package root to path for local development
+    package_root_str = str(package_root)
+    if package_root_str not in sys.path:
+        sys.path.insert(0, package_root_str)
+    
+    # Add tests directory for fixture imports
+    tests_root_str = str(tests_root)
+    if tests_root_str not in sys.path:
+        sys.path.insert(0, tests_root_str)
+    
+    yield
+
+
+def pytest_collection_modifyitems(config, items):
+    """Modify test collection to handle optional dependencies and conditions."""
+    import subprocess
+    
+    # Check if Docker is available
+    try:
+        result = subprocess.run(
+            ["docker", "--version"],
+            capture_output=True,
+            timeout=5
+        )
+        has_docker = result.returncode == 0
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        has_docker = False
+    
+    for item in items:
+        # Skip tests marked as requires_docker if docker is not available
+        if "requires_docker" in item.keywords and not has_docker:
+            item.add_marker(pytest.mark.skip(reason="Docker not available"))
 
 
 @pytest.fixture
@@ -94,3 +158,12 @@ def runtime_dir(tmp_path):
     runtime_path.mkdir()
     return runtime_path
 
+
+@pytest.fixture
+def clean_env():
+    """Provide a clean environment for tests that modify env vars."""
+    original_env = os.environ.copy()
+    yield
+    # Restore original environment
+    os.environ.clear()
+    os.environ.update(original_env)

@@ -8,8 +8,15 @@ Tests cover:
 - Model validators (cross-field validation)
 - Edge cases (empty lists, None values, boundaries)
 """
-
+import sys
+from pathlib import Path
 import pytest
+
+# Ensure tests directory is in path for fixture imports
+tests_dir = Path(__file__).parent
+if str(tests_dir) not in sys.path:
+    sys.path.insert(0, str(tests_dir))
+
 from dockrion_schema import (
     DockSpec,
     AgentConfig,

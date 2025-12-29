@@ -2,7 +2,7 @@
 name = "dockrion-adapters"
 version = "0.1.0"
 description = "Framework abstraction layer for Dockrion - uniform interface to LangGraph, LangChain, and other agent frameworks"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 authors = [
@@ -11,6 +11,7 @@ authors = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -43,24 +44,41 @@ all = [
 dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
-    "pytest-asyncio>=0.21",  # For async tests (Phase 2)
+    "pytest-asyncio>=0.21",
     "black>=23.0",
     "ruff>=0.1.0",
     "mypy>=1.5",
+]
+
+# Testing dependencies (subset for users who just want to run tests)
+test = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-asyncio>=0.21",
 ]
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dockrion_adapters*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
+pythonpath = ["."]
 addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "requires_langgraph: marks tests that require langgraph to be installed",
 ]
 
 [tool.coverage.run]
@@ -82,7 +100,7 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
@@ -94,7 +112,7 @@ warn_unused_ignores = true
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [

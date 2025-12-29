@@ -20,7 +20,64 @@ dockrion-runtime = { workspace = true }
 dockrion-sdk = { workspace = true }
 dockrion-cli = { workspace = true }
 
-# Optional shared tool config
+# Shared tool configurations
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "packages/common-py/tests",
+    "packages/schema/tests",
+    "packages/adapters/tests",
+    "packages/policy-engine/tests",
+    "packages/telemetry/tests",
+    "packages/runtime/tests",
+    "packages/sdk-python/tests",
+    "packages/cli/tests",
+]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "requires_langgraph: marks tests that require langgraph",
+    "requires_docker: marks tests that require docker",
+    "requires_yaml: marks tests that require pyyaml",
+]
+
+[tool.coverage.run]
+source = [
+    "packages/common-py/dockrion_common",
+    "packages/schema/dockrion_schema",
+    "packages/adapters/dockrion_adapters",
+    "packages/policy-engine/dockrion_policy",
+    "packages/telemetry/dockrion_telemetry",
+    "packages/runtime/dockrion_runtime",
+    "packages/sdk-python/dockrion_sdk",
+    "packages/cli/dockrion_cli",
+]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

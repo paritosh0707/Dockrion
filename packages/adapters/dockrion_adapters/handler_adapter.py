@@ -79,7 +79,7 @@ class HandlerAdapter:
         
         logger.debug("HandlerAdapter initialized")
     
-    def load(self, handler_path: str) -> None:
+    def load(self, entrypoint: str) -> None:
         """
         Load handler function from path.
         
@@ -92,8 +92,8 @@ class HandlerAdapter:
         6. Store for invocations
         
         Args:
-            handler_path: Format "module.path:callable_name"
-                         Example: "app.service:process_request"
+            entrypoint: Format "module.path:callable_name"
+                        Example: "app.service:process_request"
 
         Raises:
             AdapterLoadError: If loading fails
@@ -105,6 +105,7 @@ class HandlerAdapter:
             >>> adapter = HandlerAdapter()
             >>> adapter.load("myapp.handlers:process_invoice")
         """
+        handler_path = entrypoint  # Alias for clarity in handler context
         logger.info("Loading handler", handler_path=handler_path)
         
         # Step 1: Validate and parse handler path
@@ -285,6 +286,7 @@ class HandlerAdapter:
         """
         # Capture handler reference for thread-safe closure
         handler = self._handler
+        assert handler is not None, "Handler not loaded"
         
         def run_in_new_loop() -> Dict[str, Any]:
             """Run the async handler in a fresh event loop (for executor thread)."""

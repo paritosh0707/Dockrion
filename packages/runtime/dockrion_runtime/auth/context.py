@@ -151,7 +151,7 @@ class AuthContext:
         
         def get_claim(claim_path: str) -> Any:
             """Get nested claim value using dot notation."""
-            value = claims
+            value: Any = claims
             for part in claim_path.split("."):
                 if isinstance(value, dict):
                     value = value.get(part)

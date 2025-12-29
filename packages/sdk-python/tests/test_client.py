@@ -1,7 +1,14 @@
 """Tests for client.py module."""
+import sys
 import os
 import pytest
 from pathlib import Path
+
+# Ensure tests directory is in path for fixture imports
+tests_dir = Path(__file__).parent
+if str(tests_dir) not in sys.path:
+    sys.path.insert(0, str(tests_dir))
+
 from dockrion_sdk.client import (
     load_dockspec,
     invoke_local,
@@ -19,7 +26,7 @@ class TestLoadDockspec:
         spec = load_dockspec(sample_dockfile)
         assert spec.agent.name == "test-agent"
         assert spec.agent.framework == "langgraph"
-        assert spec.model.provider == "openai"
+        assert spec.expose.port == 8080
     
     def test_load_file_not_found(self):
         """Test loading a non-existent Dockfile."""
@@ -44,8 +51,8 @@ class TestLoadDockspec:
     def test_load_with_env_vars(self, dockfile_with_env_vars, set_env_vars):
         """Test loading a Dockfile with environment variable expansion."""
         spec = load_dockspec(dockfile_with_env_vars)
-        assert spec.model.name == "test-model"
         assert spec.agent.name == "test-agent"
+        assert spec.expose.port == 8080
 
 
 class TestExpandEnvVars:
@@ -123,9 +130,6 @@ agent:
   name: bad-agent
   entrypoint: nonexistent.module:function
   framework: langgraph
-model:
-  provider: openai
-  name: gpt-4
 io_schema:
   input:
     type: object

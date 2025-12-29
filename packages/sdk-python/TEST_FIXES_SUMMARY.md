@@ -45,16 +45,6 @@ if spec.arguments and isinstance(spec.arguments, dict):
         ...
 ```
 
-### 5. Model Field Optional Check
-**Problem:** Not checking if `spec.model` exists before accessing `temperature`.
-
-**Fixed in:** `dockrion_sdk/validate.py`
-```python
-# Added null check:
-if spec.model and spec.model.temperature and spec.model.temperature > 1.0:
-    ...
-```
-
 ## Test Files Modified
 
 1. **packages/sdk-python/tests/conftest.py**
@@ -78,9 +68,8 @@ if spec.model and spec.model.temperature and spec.model.temperature > 1.0:
    - Fixed `test_validate_timeout_warning_high`
    - Fixed `test_validate_timeout_warning_low`
 
-5. **packages/sdk-python/dockrion_sdk/validate.py**
+5. **packages/sdk-python/dockrion_sdk/core/validate.py**
    - Fixed argument field access logic
-   - Fixed model null checks
 
 ## Expected Test Results
 

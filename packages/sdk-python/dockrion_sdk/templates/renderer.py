@@ -16,7 +16,7 @@ import json
 import re
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
-from datetime import datetime
+from datetime import datetime, timezone
 
 from jinja2 import (
     Environment,
@@ -24,7 +24,8 @@ from jinja2 import (
     select_autoescape,
     TemplateNotFound,
     TemplateError,
-    StrictUndefined
+    StrictUndefined,
+    Undefined,
 )
 
 from dockrion_schema import DockSpec
@@ -43,8 +44,8 @@ DOCKRION_VERSION = "1.0.0"
 DEFAULT_TEMPLATE_DIRS = [
     # User-provided templates (highest priority)
     Path.cwd() / "templates",
-    # Package templates
-    Path(__file__).parent.parent.parent.parent / "templates",
+    # Package templates (go up from templates/ subdir)
+    Path(__file__).parent.parent.parent.parent.parent / "templates",
 ]
 
 # Template file mappings
@@ -59,7 +60,7 @@ TEMPLATE_FILES = {
 # Custom Jinja2 Filters
 # ============================================================================
 
-def to_json_filter(value: Any, indent: int = None) -> str:
+def to_json_filter(value: Any, indent: Optional[int] = None) -> str:
     """Convert value to JSON string."""
     return json.dumps(value, indent=indent, default=str)
 
@@ -141,7 +142,7 @@ class TemplateContext:
         context = {
             # Meta information
             "dockrion_version": DOCKRION_VERSION,
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "python_version": "3.12",
             
             # Full spec as Python literal (for embedding in runtime)
@@ -176,7 +177,7 @@ class TemplateContext:
         Returns:
             List of directory paths to copy into container
         """
-        directories = []
+        directories: List[str] = []
         
         # Extract from entrypoint (if using entrypoint mode)
         entrypoint = self.spec.agent.entrypoint
@@ -205,7 +206,7 @@ class TemplateContext:
         Returns:
             List of pip package specifiers
         """
-        deps = []
+        deps: List[str] = []
         
         # Check for dependencies in arguments
         if self.spec.arguments and hasattr(self.spec.arguments, 'extra'):
@@ -247,7 +248,7 @@ class TemplateRenderer:
             strict_mode: If True, raise errors for undefined variables
         """
         # Build template search path
-        search_paths = []
+        search_paths: List[str] = []
         
         if template_dirs:
             for td in template_dirs:
@@ -275,7 +276,7 @@ class TemplateRenderer:
             trim_blocks=True,
             lstrip_blocks=True,
             keep_trailing_newline=True,
-            undefined=StrictUndefined if strict_mode else None
+            undefined=StrictUndefined if strict_mode else Undefined
         )
         
         # Register custom filters
@@ -435,7 +436,7 @@ class TemplateRenderer:
         Returns:
             List of template file paths
         """
-        templates = []
+        templates: List[str] = []
         for path in self.template_paths:
             for root, _, files in os.walk(path):
                 for file in files:
@@ -465,17 +466,29 @@ def get_renderer() -> TemplateRenderer:
     return _renderer
 
 
-def render_runtime(spec: DockSpec, **kwargs) -> str:
+def render_runtime(spec: DockSpec, **kwargs: Any) -> str:
     """Convenience function to render runtime code."""
     return get_renderer().render_runtime(spec, kwargs if kwargs else None)
 
 
-def render_dockerfile(spec: DockSpec, **kwargs) -> str:
+def render_dockerfile(spec: DockSpec, **kwargs: Any) -> str:
     """Convenience function to render Dockerfile."""
     return get_renderer().render_dockerfile(spec, kwargs if kwargs else None)
 
 
-def render_requirements(spec: DockSpec, **kwargs) -> str:
+def render_requirements(spec: DockSpec, **kwargs: Any) -> str:
     """Convenience function to render requirements.txt."""
     return get_renderer().render_requirements(spec, kwargs if kwargs else None)
+
+
+__all__ = [
+    "TemplateRenderer",
+    "TemplateContext",
+    "render_runtime",
+    "render_dockerfile",
+    "render_requirements",
+    "get_renderer",
+    "DOCKRION_VERSION",
+    "TEMPLATE_FILES",
+]
 

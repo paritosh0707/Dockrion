@@ -23,7 +23,7 @@ from dockrion_common import (
     hash_api_key,
     validate_api_key,
     # HTTP Models
-    error_response,
+    ErrorResponse,
 )
 
 
@@ -35,7 +35,8 @@ class TestErrors:
         error = ValidationError("Test error")
         assert error.code == "VALIDATION_ERROR"
         assert error.message == "Test error"
-        assert "ValidationError" in str(error)
+        # str(error) returns the message
+        assert "Test error" in str(error)
     
     def test_auth_error(self):
         """Test AuthError"""
@@ -135,21 +136,20 @@ class TestAuth:
 class TestHTTPModels:
     """Test HTTP response models"""
     
-    def test_error_response_dockrion_error(self):
-        """Test error response with DockrionError"""
-        error = ValidationError("Invalid input")
-        response = error_response(error)
-        assert response["success"] is False
-        assert response["error"] == "Invalid input"
-        assert response["code"] == "VALIDATION_ERROR"
+    def test_error_response_creation(self):
+        """Test ErrorResponse model creation"""
+        response = ErrorResponse(error="Invalid input", code="VALIDATION_ERROR")
+        assert response.success is False
+        assert response.error == "Invalid input"
+        assert response.code == "VALIDATION_ERROR"
     
-    def test_error_response_generic_exception(self):
-        """Test error response with generic exception"""
-        error = ValueError("Something went wrong")
-        response = error_response(error)
-        assert response["success"] is False
-        assert response["error"] == "Something went wrong"
-        assert response["code"] == "INTERNAL_ERROR"
+    def test_error_response_model_dump(self):
+        """Test ErrorResponse serialization"""
+        response = ErrorResponse(error="Something went wrong", code="INTERNAL_ERROR")
+        data = response.model_dump()
+        assert data["success"] is False
+        assert data["error"] == "Something went wrong"
+        assert data["code"] == "INTERNAL_ERROR"
 
 
 def test_package_imports():
@@ -159,4 +159,3 @@ def test_package_imports():
     assert __version__ == "0.1.0"
     assert isinstance(__all__, list)
     assert len(__all__) > 0
-

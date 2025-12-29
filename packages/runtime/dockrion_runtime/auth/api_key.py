@@ -138,11 +138,11 @@ class ApiKeyAuthHandler(BaseAuthHandler):
     def _load_multi_keys(self) -> None:
         """Load multiple API keys matching prefix pattern."""
         self._multi_key_mode = True
-        prefix = self.config.api_key_prefix
+        prefix = self.config.api_key_prefix or ""
         
         # Scan environment for matching keys
         for env_name, env_value in os.environ.items():
-            if env_name.startswith(prefix):
+            if prefix and env_name.startswith(prefix):
                 key_id = env_name[len(prefix):]  # Extract ID from var name
                 key_value = env_value.strip()
                 

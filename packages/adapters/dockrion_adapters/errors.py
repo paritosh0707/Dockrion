@@ -69,7 +69,7 @@ class ModuleNotFoundError(AdapterLoadError):
         ... )
     """
     
-    def __init__(self, module_path: str, hint: str = None):
+    def __init__(self, module_path: str, hint: str | None = None):
         message = f"Module '{module_path}' not found"
         if hint:
             message += f". Hint: {hint}"
@@ -91,7 +91,7 @@ class CallableNotFoundError(AdapterLoadError):
         ... )
     """
     
-    def __init__(self, module_path: str, callable_name: str, available: list = None):
+    def __init__(self, module_path: str, callable_name: str, available: list | None = None):
         message = f"Module '{module_path}' has no function '{callable_name}'"
         if available:
             message += f". Available: {available}"
@@ -134,7 +134,7 @@ class AdapterNotLoadedError(AdapterError):
         ... )
     """
     
-    def __init__(self, message: str = None):
+    def __init__(self, message: str | None = None):
         if not message:
             message = "Adapter not loaded. Call .load(entrypoint) before .invoke()"
         super().__init__(message)
@@ -172,7 +172,7 @@ class AgentCrashedError(AgentExecutionError):
         ... )
     """
     
-    def __init__(self, message: str, original_error: Exception = None):
+    def __init__(self, message: str, original_error: Exception | None = None):
         super().__init__(message)
         self.code = "AGENT_CRASHED"
         self.original_error = original_error
@@ -194,7 +194,7 @@ class InvalidOutputError(AgentExecutionError):
         ... )
     """
     
-    def __init__(self, message: str, actual_type: type = None):
+    def __init__(self, message: str, actual_type: type | None = None):
         super().__init__(message)
         self.code = "INVALID_OUTPUT"
         self.actual_type = actual_type

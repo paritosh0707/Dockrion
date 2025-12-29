@@ -2,19 +2,77 @@
 name = "dockrion-schema"
 version = "0.1.0"
 description = "Dockfile schema and validation for Dockrion"
-requires-python = ">=3.12"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Dockrion Team"}
+]
+keywords = ["dockrion", "schema", "validation", "dockfile"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
 dependencies = [
     "pydantic>=2.5",
-    "dockrion-common>=0.1.1,<0.2.0",
+    "dockrion-common>=0.1.0",
 ]
 
 [project.optional-dependencies]
+yaml = [
+    "pyyaml>=6.0",
+]
 dev = [
-    "pyyaml>=6.0",  # For serialization utilities (to_yaml_string)
-    "pytest>=7.4",
-    "pytest-cov>=4.1",
+    "pyyaml>=6.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+    "mypy>=1.5",
+]
+test = [
+    "pyyaml>=6.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
 ]
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dockrion_schema*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+pythonpath = ["."]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "requires_yaml: marks tests that require pyyaml",
+]
+
+[tool.coverage.run]
+source = ["dockrion_schema"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4"]
+ignore = ["E501"]
