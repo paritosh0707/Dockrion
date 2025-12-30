@@ -7,7 +7,8 @@ members = [
   "packages/telemetry",
   "packages/runtime",
   "packages/sdk-python",
-  "packages/cli"
+  "packages/cli",
+  "packages/dockrion"
 ]
 
 [tool.uv.sources]
@@ -19,6 +20,7 @@ dockrion-telemetry = { workspace = true }
 dockrion-runtime = { workspace = true }
 dockrion-sdk = { workspace = true }
 dockrion-cli = { workspace = true }
+dockrion = { workspace = true }
 
 # Shared tool configurations
 [tool.ruff]
@@ -80,4 +82,10 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
     "@abstractmethod",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.0",
+    "ruff>=0.14.5",
 ]

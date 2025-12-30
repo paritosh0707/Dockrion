@@ -20,7 +20,12 @@ from fastapi.staticfiles import StaticFiles
 
 from .auth import AuthContext, AuthError, create_auth_handler
 from .config import RuntimeConfig, RuntimeState
-from .endpoints import create_health_router, create_info_router, create_invoke_router, create_welcome_router
+from .endpoints import (
+    create_health_router,
+    create_info_router,
+    create_invoke_router,
+    create_welcome_router,
+)
 from .metrics import RuntimeMetrics
 from .openapi import build_security_schemes, configure_openapi_security
 from .policies import create_policy_engine

@@ -115,10 +115,10 @@ class TestRuntimeGeneration:
 
         # Write to file and try to compile
         runtime_file = tmp_path / "test_runtime.py"
-        runtime_file.write_text(runtime_code)
+        runtime_file.write_text(runtime_code, encoding="utf-8")
 
         # Should compile without errors
-        with open(runtime_file, "r") as f:
+        with open(runtime_file, "r", encoding="utf-8") as f:
             code = f.read()
             compile(code, str(runtime_file), "exec")
 

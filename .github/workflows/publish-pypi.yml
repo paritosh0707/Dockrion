@@ -20,6 +20,7 @@ on:
           - runtime
           - sdk-python
           - cli
+          - dockrion
       use_token:
         description: 'Use API token instead of trusted publisher (for first publish)'
         required: false
@@ -101,6 +102,13 @@ jobs:
           python -m build
           ls -la dist/
 
+      - name: Build dockrion (meta-package)
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'dockrion'
+        run: |
+          cd packages/dockrion
+          python -m build
+          ls -la dist/
+
       - name: Upload common-py artifacts
         if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'common-py'
         uses: actions/upload-artifact@v4
@@ -156,6 +164,13 @@ jobs:
         with:
           name: dist-cli
           path: packages/cli/dist/
+
+      - name: Upload dockrion artifacts
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'dockrion'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-dockrion
+          path: packages/dockrion/dist/
 
   # Publish base packages (no internal dependencies)
   publish-base:
@@ -421,6 +436,46 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist-cli/
+          skip-existing: true
+          verbose: true
+        continue-on-error: true
+
+  # Publish dockrion meta-package (depends on CLI)
+  publish-dockrion:
+    name: Publish Dockrion Meta-Package
+    needs: publish-cli
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download dockrion artifacts
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'dockrion'
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-dockrion
+          path: dist-dockrion/
+        continue-on-error: true
+
+      # Publish with API Token
+      - name: Publish dockrion to PyPI (Token)
+        if: (github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'dockrion') && github.event.inputs.use_token == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist-dockrion/
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true
+          verbose: true
+        continue-on-error: true
+
+      # Publish with Trusted Publisher
+      - name: Publish dockrion to PyPI (Trusted)
+        if: (github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'dockrion') && github.event.inputs.use_token != 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist-dockrion/
           skip-existing: true
           verbose: true
         continue-on-error: true
