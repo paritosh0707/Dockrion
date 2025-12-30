@@ -16,13 +16,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-
-[project.urls]
-Homepage = "https://github.com/paritosh0707/Dockrion"
-Repository = "https://github.com/paritosh0707/Dockrion"
-Documentation = "https://github.com/paritosh0707/Dockrion#readme"
-Issues = "https://github.com/paritosh0707/Dockrion/issues"
-
 dependencies = [
     "fastapi>=0.109.0",
     "uvicorn[standard]>=0.27.0",
@@ -32,6 +25,12 @@ dependencies = [
     "dockrion-schema>=0.0.1",
     "dockrion-adapters>=0.0.1",
 ]
+
+[project.urls]
+Homepage = "https://github.com/paritosh0707/Dockrion"
+Repository = "https://github.com/paritosh0707/Dockrion"
+Documentation = "https://github.com/paritosh0707/Dockrion#readme"
+Issues = "https://github.com/paritosh0707/Dockrion/issues"
 
 [project.optional-dependencies]
 jwt = [

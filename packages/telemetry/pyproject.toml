@@ -16,16 +16,15 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
+dependencies = [
+    "prometheus-client>=0.20",
+]
 
 [project.urls]
 Homepage = "https://github.com/paritosh0707/Dockrion"
 Repository = "https://github.com/paritosh0707/Dockrion"
 Documentation = "https://github.com/paritosh0707/Dockrion#readme"
 Issues = "https://github.com/paritosh0707/Dockrion/issues"
-
-dependencies = [
-    "prometheus-client>=0.20",
-]
 
 [project.optional-dependencies]
 dev = [
