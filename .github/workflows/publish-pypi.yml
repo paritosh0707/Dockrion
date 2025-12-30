@@ -1,0 +1,150 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish (or "all" for all packages)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - common-py
+          - schema
+          - adapters
+          - policy-engine
+          - telemetry
+          - runtime
+          - sdk-python
+          - cli
+
+jobs:
+  build-and-publish:
+    name: Build and Publish to PyPI
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # Required for trusted publishing
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: |
+          pip install --upgrade pip
+          pip install build twine
+
+      - name: Build and publish common-py
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'common-py'
+        run: |
+          cd packages/common-py
+          python -m build
+          ls -la dist/
+
+      - name: Build and publish schema
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'schema'
+        run: |
+          cd packages/schema
+          python -m build
+          ls -la dist/
+
+      - name: Build and publish adapters
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'adapters'
+        run: |
+          cd packages/adapters
+          python -m build
+          ls -la dist/
+
+      - name: Build and publish policy-engine
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'policy-engine'
+        run: |
+          cd packages/policy-engine
+          python -m build
+          ls -la dist/
+
+      - name: Build and publish telemetry
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'telemetry'
+        run: |
+          cd packages/telemetry
+          python -m build
+          ls -la dist/
+
+      - name: Build and publish runtime
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'runtime'
+        run: |
+          cd packages/runtime
+          python -m build
+          ls -la dist/
+
+      - name: Build and publish sdk-python
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'sdk-python'
+        run: |
+          cd packages/sdk-python
+          python -m build
+          ls -la dist/
+
+      - name: Build and publish cli
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'cli'
+        run: |
+          cd packages/cli
+          python -m build
+          ls -la dist/
+
+      - name: Publish common-py to PyPI
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'common-py'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/common-py/dist/
+
+      - name: Publish schema to PyPI
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'schema'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/schema/dist/
+
+      - name: Publish adapters to PyPI
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'adapters'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/adapters/dist/
+
+      - name: Publish policy-engine to PyPI
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'policy-engine'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/policy-engine/dist/
+
+      - name: Publish telemetry to PyPI
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'telemetry'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/telemetry/dist/
+
+      - name: Publish runtime to PyPI
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'runtime'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/runtime/dist/
+
+      - name: Publish sdk-python to PyPI
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'sdk-python'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/sdk-python/dist/
+
+      - name: Publish cli to PyPI
+        if: github.event_name == 'release' || github.event.inputs.package == 'all' || github.event.inputs.package == 'cli'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/cli/dist/
+
