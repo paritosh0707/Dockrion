@@ -1,4 +1,4 @@
-.PHONY: bootstrap bootstrap-dev test test-cov test-verbose lint typecheck ci clean help
+.PHONY: bootstrap bootstrap-dev test test-cov test-verbose lint typecheck ci clean help build build-check
 
 # Default target
 help:
@@ -20,6 +20,12 @@ help:
 	@echo "  make typecheck     - Run type checker (mypy)"
 	@echo "  make format        - Format code (ruff format)"
 	@echo "  make ci            - Run all CI checks (lint, typecheck, test)"
+	@echo ""
+	@echo "Build & Publish:"
+	@echo "  make build         - Build the dockrion package for distribution"
+	@echo "  make build-check   - Build and verify package contents"
+	@echo "  make publish-test  - Publish to TestPyPI (for testing)"
+	@echo "  make publish       - Publish to PyPI (production)"
 	@echo ""
 	@echo "Package-specific testing:"
 	@echo "  make test-adapters   - Run adapters tests"
@@ -151,6 +157,52 @@ format:
 ci: lint typecheck test
 	@echo "=== All CI checks passed! ==="
 
+# ============================================================================
+# Build & Publish (only the dockrion meta-package is published)
+# ============================================================================
+
+# Build the dockrion package for distribution
+build:
+	@echo "Building dockrion package..."
+	cd packages/dockrion && python build_package.py
+	@echo ""
+	@echo "Built packages:"
+	@ls -la packages/dockrion/dist/
+
+# Build and verify package contents
+build-check: build
+	@echo ""
+	@echo "Verifying package contents..."
+	@cd packages/dockrion && python -c "\
+import zipfile, glob, sys; \
+wheels = glob.glob('dist/*.whl'); \
+wheel = wheels[0] if wheels else sys.exit('No wheel found'); \
+print(f'Checking: {wheel}'); \
+files = zipfile.ZipFile(wheel).namelist(); \
+expected = ['dockrion_common/', 'dockrion_schema/', 'dockrion_adapters/', \
+            'dockrion_policy/', 'dockrion_telemetry/', 'dockrion_runtime/', \
+            'dockrion_sdk/', 'dockrion_cli/']; \
+missing = [p for p in expected if not any(f.startswith(p) for f in files)]; \
+sys.exit(f'Missing: {missing}') if missing else print('✓ All packages included'); \
+print(f'Total files: {len(files)}')"
+	@echo ""
+	@echo "Checking with twine..."
+	cd packages/dockrion && twine check dist/*
+
+# Publish to TestPyPI (for testing before real publish)
+publish-test: build-check
+	@echo "Publishing to TestPyPI..."
+	cd packages/dockrion && twine upload --repository testpypi dist/*
+
+# Publish to PyPI (production)
+publish: build-check
+	@echo "Publishing to PyPI..."
+	cd packages/dockrion && twine upload dist/*
+
+# ============================================================================
+# Cleanup
+# ============================================================================
+
 # Clean build artifacts
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
@@ -161,3 +213,4 @@ clean:
 	find . -type d -name "build" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name ".coverage" -delete 2>/dev/null || true
 	rm -rf dist/
+	rm -rf packages/dockrion/dist/

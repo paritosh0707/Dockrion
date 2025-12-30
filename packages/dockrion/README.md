@@ -14,14 +14,20 @@ Dockrion provides a complete toolkit for building, validating, and deploying AI 
 pip install dockrion
 ```
 
-For specific components:
+### With Optional Features
 
 ```bash
-# Just the SDK (for building agents)
-pip install dockrion[sdk]
+# LangGraph support
+pip install dockrion[langgraph]
 
-# Include the runtime (for deploying agents)
+# LangChain support
+pip install dockrion[langchain]
+
+# Runtime (for deploying agents as a server)
 pip install dockrion[runtime]
+
+# JWT authentication for runtime
+pip install dockrion[jwt]
 
 # Everything
 pip install dockrion[all]
@@ -45,21 +51,20 @@ dockrion run
 dockrion deploy
 ```
 
-## Packages
+## What's Included
 
-Dockrion is a collection of modular packages:
+The `dockrion` package bundles all the necessary components:
 
-| Package | Description | Install |
-|---------|-------------|---------|
-| **dockrion** | Meta-package (this one) | `pip install dockrion` |
-| **dockrion-cli** | Command-line interface | `pip install dockrion-cli` |
-| **dockrion-sdk** | SDK for building agents | `pip install dockrion-sdk` |
-| **dockrion-runtime** | FastAPI runtime for deployed agents | `pip install dockrion-runtime` |
-| **dockrion-common** | Shared utilities | `pip install dockrion-common` |
-| **dockrion-schema** | Dockfile schema validation | `pip install dockrion-schema` |
-| **dockrion-adapters** | Framework adapters (LangGraph, etc.) | `pip install dockrion-adapters` |
-| **dockrion-policy** | Policy engine for safety controls | `pip install dockrion-policy` |
-| **dockrion-telemetry** | Observability and metrics | `pip install dockrion-telemetry` |
+| Module | Description |
+|--------|-------------|
+| `dockrion_cli` | Command-line interface |
+| `dockrion_sdk` | SDK for building agents |
+| `dockrion_runtime` | FastAPI runtime for deployed agents |
+| `dockrion_common` | Shared utilities |
+| `dockrion_schema` | Dockfile schema validation |
+| `dockrion_adapters` | Framework adapters (LangGraph, LangChain, etc.) |
+| `dockrion_policy` | Policy engine for safety controls |
+| `dockrion_telemetry` | Observability and metrics |
 
 ## Features
 
@@ -77,4 +82,3 @@ For full documentation, visit the [GitHub repository](https://github.com/paritos
 ## License
 
 Apache-2.0
-

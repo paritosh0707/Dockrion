@@ -1,3 +1,7 @@
+# NOTE: This package is INTERNAL ONLY - do not publish to PyPI separately.
+# It is bundled into the main 'dockrion' meta-package for distribution.
+# This pyproject.toml is used for local development in the uv workspace.
+
 [project]
 name = "dockrion-cli"
 version = "0.0.1"

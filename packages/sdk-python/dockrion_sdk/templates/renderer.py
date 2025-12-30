@@ -43,8 +43,8 @@ DOCKRION_VERSION = "1.0.0"
 DEFAULT_TEMPLATE_DIRS = [
     # User-provided templates (highest priority)
     Path.cwd() / "templates",
-    # Package templates (go up from templates/ subdir)
-    Path(__file__).parent.parent.parent.parent.parent / "templates",
+    # Package templates (same directory as this renderer.py file)
+    Path(__file__).parent,
 ]
 
 # Template file mappings

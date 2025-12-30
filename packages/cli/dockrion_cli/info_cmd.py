@@ -136,7 +136,7 @@ def doctor():
         checks_passed += 1
     except ImportError as e:
         warning(f"Missing package: {str(e)}")
-        issues.append("Install missing packages with: pip install dockrion-sdk")
+        issues.append("Install missing packages with: pip install dockrion")
 
     # Summary
     console.print()

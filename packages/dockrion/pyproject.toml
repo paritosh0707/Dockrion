@@ -4,7 +4,7 @@ version = "0.0.1"
 description = "Dockrion - Deploy and manage AI agents with ease"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 authors = [
     {name = "Paritosh Sharma", email = "paritoshsharma0707@gmail.com"}
 ]
@@ -13,14 +13,23 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+
+# Core dependencies (CLI + SDK + their transitive deps)
 dependencies = [
-    "dockrion-cli>=0.0.1",
+    # CLI deps
+    "typer>=0.12.0",
+    "rich>=13.7.0",
+    # SDK deps
+    "pyyaml>=6.0",
+    "requests>=2.31",
+    "jinja2>=3.1.0",
+    # Common/Schema deps
+    "pydantic>=2.5",
 ]
 
 [project.urls]
@@ -30,19 +39,33 @@ Documentation = "https://github.com/paritosh0707/Dockrion#readme"
 Issues = "https://github.com/paritosh0707/Dockrion/issues"
 
 [project.optional-dependencies]
-# Just the SDK (no CLI)
-sdk = [
-    "dockrion-sdk>=0.0.1",
+# LangGraph framework support
+langgraph = [
+    "langgraph>=0.0.20",
+    "langchain-core>=0.1.0",
 ]
-# Runtime for deploying agents
+
+# LangChain framework support
+langchain = [
+    "langchain>=0.1.0",
+    "langchain-core>=0.1.0",
+]
+
+# Runtime for deploying agents (includes telemetry)
 runtime = [
-    "dockrion-runtime>=0.0.1",
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "prometheus-client>=0.20",
 ]
+
+# JWT authentication for runtime
+jwt = [
+    "PyJWT[crypto]>=2.8.0",
+]
+
 # Everything
 all = [
-    "dockrion-cli>=0.0.1",
-    "dockrion-sdk>=0.0.1",
-    "dockrion-runtime>=0.0.1",
+    "dockrion[langgraph,langchain,runtime,jwt]",
 ]
 
 [project.scripts]
@@ -52,7 +75,21 @@ dockrion = "dockrion_cli.main:app"
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-# This is a meta-package with no source code
-packages = []
+# Packages are copied into this directory by build_package.py before building
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "dockrion_common*",
+    "dockrion_schema*",
+    "dockrion_adapters*",
+    "dockrion_policy*",
+    "dockrion_telemetry*",
+    "dockrion_runtime*",
+    "dockrion_sdk*",
+    "dockrion_cli*",
+]
 
+# Include package data (templates, static files)
+[tool.setuptools.package-data]
+dockrion_sdk = ["templates/**/*.j2"]
+dockrion_runtime = ["static/*.png"]
