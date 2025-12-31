@@ -2,7 +2,7 @@
 
 import typer
 
-from . import build_cmd, info_cmd, init_cmd, logs_cmd, run_cmd, test_cmd, validate_cmd
+from . import build_cmd, info_cmd, init_cmd, inspect_cmd, logs_cmd, run_cmd, test_cmd, validate_cmd
 
 app = typer.Typer(
     name="dockrion",
@@ -20,6 +20,7 @@ app.command()(logs_cmd.logs)
 app.command()(init_cmd.init)
 app.command()(info_cmd.version)
 app.command()(info_cmd.doctor)
+app.command()(inspect_cmd.inspect)
 
 
 def main():

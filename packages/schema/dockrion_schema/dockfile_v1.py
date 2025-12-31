@@ -169,8 +169,15 @@ class IOSchema(BaseModel):
 
     Defines the contract for what the agent accepts and returns.
     Runtime uses this to validate requests and format responses.
+
+    Attributes:
+        strict: If False, skip output validation. Useful when output structure
+                is dynamic or unknown. Defaults to True.
+        input: Input schema definition (optional)
+        output: Output schema definition (optional - if not provided, output is not validated)
     """
 
+    strict: bool = True
     input: Optional[IOSubSchema] = None
     output: Optional[IOSubSchema] = None
 

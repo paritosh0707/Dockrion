@@ -25,6 +25,13 @@ Package Structure:
 # Core loading and invocation
 from .core import expand_env_vars, invoke_local, load_dockspec, validate, validate_dockspec
 
+# Dependency management
+from .dependencies import (
+    DependencyConflictError,
+    DependencyMerger,
+    merge_dependencies,
+)
+
 # Deployment
 from .deployment import (
     DOCKRION_IMAGE_PREFIX,
@@ -115,4 +122,8 @@ __all__ = [
     # PyPI server utilities
     "start_local_pypi_server",
     "stop_local_pypi_server",
+    # Dependency management
+    "DependencyConflictError",
+    "DependencyMerger",
+    "merge_dependencies",
 ]

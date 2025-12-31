@@ -39,6 +39,7 @@ from .errors import (
     InvalidOutputError,
     ModuleNotFoundError,
 )
+from .serialization import serialize_for_json
 
 logger = get_logger("handler-adapter")
 
@@ -261,6 +262,9 @@ class HandlerAdapter:
                 f"Hint: Ensure your handler returns a dictionary.",
                 actual_type=type(result),
             )
+
+        # Deep serialize result to ensure JSON-serializable output
+        result = serialize_for_json(result)
 
         logger.debug(
             "Handler invocation completed",

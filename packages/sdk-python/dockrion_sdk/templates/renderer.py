@@ -9,6 +9,7 @@ Provides a robust, flexible template system for generating:
 - Other deployment artifacts
 
 Uses Jinja2 with custom filters and extensions for maximum flexibility.
+Integrates with the dependency merger for smart version conflict resolution.
 """
 
 import json
@@ -30,6 +31,8 @@ from jinja2 import (
     Undefined,
     select_autoescape,
 )
+
+from ..dependencies import DependencyConflictError, DependencyMerger
 
 logger = get_logger(__name__)
 
@@ -112,16 +115,23 @@ class TemplateContext:
     Builds the context dictionary for template rendering.
 
     Extracts and transforms data from DockSpec into template-friendly format.
+    Integrates with dependency merger for smart version conflict resolution.
     """
 
-    def __init__(self, spec: DockSpec):
+    def __init__(
+        self,
+        spec: DockSpec,
+        project_root: Optional[Path] = None,
+    ):
         """
         Initialize context builder.
 
         Args:
             spec: The DockSpec containing agent configuration
+            project_root: Root directory of the user's project (for finding requirements.txt)
         """
         self.spec = spec
+        self.project_root = project_root or Path.cwd()
 
     def build(self, extra_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -160,6 +170,10 @@ class TemplateContext:
             # Computed values
             "agent_directories": self._get_agent_directories(),
             "extra_dependencies": self._get_extra_dependencies(),
+            # Merged dependencies (with conflict resolution)
+            "merged_requirements": self._get_merged_requirements(),
+            # User requirements file path (for reference)
+            "user_requirements_file": self._get_user_requirements_path(),
         }
 
         # Merge extra context
@@ -201,18 +215,144 @@ class TemplateContext:
         """
         Extract any extra dependencies specified in the spec.
 
+        Supports two formats in Dockfile.yaml:
+        1. arguments.dependencies: ["package1", "package2"]  # Preferred
+        2. arguments.extra.dependencies: ["package1", "package2"]  # Legacy
+
+        Example Dockfile.yaml:
+            arguments:
+              dependencies:
+                - langchain-openai>=0.1.0
+                - langchain-anthropic>=0.1.0
+
         Returns:
             List of pip package specifiers
         """
         deps: List[str] = []
 
-        # Check for dependencies in arguments
-        if self.spec.arguments and hasattr(self.spec.arguments, "extra"):
-            args_extra = self.spec.arguments.extra
+        if not self.spec.arguments:
+            return deps
+
+        args = self.spec.arguments
+
+        # Check for direct dependencies (preferred format)
+        # arguments:
+        #   dependencies:
+        #     - langchain-openai>=0.1.0
+        #     - langchain-anthropic>=0.1.0
+        if isinstance(args, dict) and "dependencies" in args:
+            arg_deps = args["dependencies"]
+            if isinstance(arg_deps, list):
+                deps.extend(arg_deps)
+
+        # Check for nested extra.dependencies (legacy format)
+        # arguments:
+        #   extra:
+        #     dependencies:
+        #       - langchain-openai>=0.1.0
+        if isinstance(args, dict) and "extra" in args:
+            args_extra = args.get("extra", {})
             if isinstance(args_extra, dict) and "dependencies" in args_extra:
-                deps.extend(args_extra["dependencies"])
+                extra_deps = args_extra["dependencies"]
+                if isinstance(extra_deps, list):
+                    deps.extend(extra_deps)
 
         return deps
+
+    def _get_user_requirements_path(self) -> Optional[Path]:
+        """
+        Get the path to user's requirements file.
+
+        Checks in order:
+        1. arguments.requirements_file (user-specified)
+        2. requirements.txt (default)
+
+        Returns:
+            Path to requirements file if found, None otherwise
+        """
+        # Check for user-specified requirements file in arguments
+        if self.spec.arguments and isinstance(self.spec.arguments, dict):
+            req_file = self.spec.arguments.get("requirements_file")
+            if req_file:
+                req_path = self.project_root / req_file
+                if req_path.exists():
+                    return req_path
+
+        # Default: look for requirements.txt
+        default_path = self.project_root / "requirements.txt"
+        if default_path.exists():
+            return default_path
+
+        return None
+
+    def _get_merged_requirements(self) -> List[str]:
+        """
+        Get merged requirements with conflict resolution.
+
+        Merges:
+        1. User's requirements.txt (if exists)
+        2. Extra dependencies from Dockfile.yaml arguments
+        3. Dockrion's required dependencies
+
+        Applies smart version conflict resolution based on:
+        - User version compatible → user wins
+        - User version incompatible with core → error
+        - User version for optional packages → user wins
+
+        Returns:
+            List of pip requirement strings
+
+        Raises:
+            DependencyConflictError: If incompatible versions detected
+        """
+        # Determine framework
+        framework = "custom"
+        if self.spec.agent and self.spec.agent.framework:
+            framework = self.spec.agent.framework
+
+        # Determine observability settings
+        observability: Dict[str, bool] = {}
+        if self.spec.observability:
+            obs_dict = self.spec.observability.model_dump()
+            if obs_dict.get("langfuse"):
+                observability["langfuse"] = True
+            if obs_dict.get("langsmith"):
+                observability["langsmith"] = True
+
+        # Check for safety policies with redact patterns
+        has_safety_policies = False
+        if self.spec.policies and self.spec.policies.safety:
+            if self.spec.policies.safety.redact_patterns:
+                has_safety_policies = True
+
+        # Create merger
+        merger = DependencyMerger(
+            framework=framework,
+            observability=observability,
+            has_safety_policies=has_safety_policies,
+        )
+
+        # Get user requirements file
+        user_req_file = self._get_user_requirements_path()
+
+        # Get extra dependencies from arguments
+        extra_deps = self._get_extra_dependencies()
+
+        # Merge dependencies
+        try:
+            result = merger.merge(
+                user_requirements_file=user_req_file,
+                extra_dependencies=extra_deps,
+            )
+
+            # Log any warnings
+            for warning in result.warnings:
+                logger.warning(warning)
+
+            return result.requirements
+        except DependencyConflictError:
+            # Re-raise to be handled by caller
+            raise
 
 
 # ============================================================================
@@ -305,25 +445,31 @@ class TemplateRenderer:
             rendered = template.render(**context)
             return rendered
 
-        except TemplateNotFound:
+        except TemplateNotFound as e:
             raise DockrionError(
                 f"Template not found: {template_name}\nSearched in: {self.template_paths}"
-            )
+            ) from e
         except TemplateError as e:
-            raise DockrionError(f"Template rendering error: {e}")
+            raise DockrionError(f"Template rendering error: {e}") from e
 
-    def render_runtime(self, spec: DockSpec, extra_context: Optional[Dict[str, Any]] = None) -> str:
+    def render_runtime(
+        self,
+        spec: DockSpec,
+        extra_context: Optional[Dict[str, Any]] = None,
+        project_root: Optional[Path] = None,
+    ) -> str:
         """
         Render the FastAPI runtime code.
 
         Args:
             spec: Agent specification
             extra_context: Additional template variables
+            project_root: Root directory of user's project
 
         Returns:
             Python code for the runtime
         """
-        ctx_builder = TemplateContext(spec)
+        ctx_builder = TemplateContext(spec, project_root=project_root)
         context = ctx_builder.build(extra_context)
 
         template_file = TEMPLATE_FILES["runtime"]
@@ -338,6 +484,7 @@ class TemplateRenderer:
         agent_path: str = ".",
         dev_mode: bool = False,
         local_packages: Optional[list] = None,
+        project_root: Optional[Path] = None,
     ) -> str:
         """
         Render the Dockerfile.
@@ -348,11 +495,12 @@ class TemplateRenderer:
             agent_path: Relative path from build context to agent directory
             dev_mode: If True, copy local packages into Docker (for development)
             local_packages: List of local package dicts with 'name' and 'path' keys
+            project_root: Root directory of user's project
 
         Returns:
             Dockerfile content
         """
-        ctx_builder = TemplateContext(spec)
+        ctx_builder = TemplateContext(spec, project_root=project_root)
         context = ctx_builder.build(extra_context)
 
         # Add agent_path to context for Dockerfile template
@@ -367,7 +515,11 @@ class TemplateRenderer:
         return self.render(template_file, context)
 
     def render_requirements(
-        self, spec: DockSpec, extra_context: Optional[Dict[str, Any]] = None
+        self,
+        spec: DockSpec,
+        extra_context: Optional[Dict[str, Any]] = None,
+        project_root: Optional[Path] = None,
+        use_merged: bool = True,
     ) -> str:
         """
         Render the requirements.txt file.
@@ -375,22 +527,75 @@ class TemplateRenderer:
         Args:
             spec: Agent specification
             extra_context: Additional template variables
+            project_root: Root directory of user's project
+            use_merged: If True, use merged dependencies with conflict resolution
 
         Returns:
             Requirements file content
-        """
-        ctx_builder = TemplateContext(spec)
-        context = ctx_builder.build(extra_context)
 
+        Raises:
+            DependencyConflictError: If use_merged=True and incompatible versions detected
+        """
+        ctx_builder = TemplateContext(spec, project_root=project_root)
+
+        # Build context once - this may raise DependencyConflictError
+        # which should propagate to the caller
+        try:
+            context = ctx_builder.build(extra_context)
+        except DependencyConflictError:
+            # Re-raise to be handled by caller
+            raise
+
+        # If use_merged and merged_requirements is available, generate directly
+        if use_merged and context.get("merged_requirements"):
+            return self._generate_merged_requirements_content(spec, context)
+
+        # Fallback to template-based rendering (reuse the same context)
         template_file = TEMPLATE_FILES["requirements"]
         logger.info(f"Rendering requirements from template: {template_file}")
 
         result = self.render(template_file, context)
-
         return result
 
+    def _generate_merged_requirements_content(
+        self, spec: DockSpec, context: Dict[str, Any]
+    ) -> str:
+        """
+        Generate requirements.txt content from merged dependencies.
+
+        Args:
+            spec: Agent specification
+            context: Template context with merged_requirements
+
+        Returns:
+            Requirements file content
+        """
+        lines = [
+            "# ============================================================================",
+            "# Dockrion Agent Runtime - Python Dependencies",
+            "# ============================================================================",
+            f"# Agent: {context.get('agent', {}).get('name', 'unknown')}",
+            f"# Framework: {context.get('agent', {}).get('framework', 'custom')}",
+            "# Generated by Dockrion SDK",
+            "# ============================================================================",
+            "",
+        ]
+
+        # Add all merged requirements
+        merged = context.get("merged_requirements", [])
+        if merged:
+            lines.append("# Dependencies (merged from user and dockrion requirements)")
+            lines.append("# --------------------------------------------------------")
+            lines.extend(sorted(merged))
+            lines.append("")
+
+        return "\n".join(lines)
+
     def render_all(
-        self, spec: DockSpec, extra_context: Optional[Dict[str, Any]] = None
+        self,
+        spec: DockSpec,
+        extra_context: Optional[Dict[str, Any]] = None,
+        project_root: Optional[Path] = None,
     ) -> Dict[str, str]:
         """
         Render all deployment templates.
@@ -398,6 +603,7 @@ class TemplateRenderer:
         Args:
             spec: Agent specification
             extra_context: Additional template variables
+            project_root: Root directory of user's project
 
         Returns:
             Dictionary mapping file names to rendered content:
@@ -408,9 +614,11 @@ class TemplateRenderer:
             }
         """
         return {
-            "main.py": self.render_runtime(spec, extra_context),
-            "Dockerfile": self.render_dockerfile(spec, extra_context),
-            "requirements.txt": self.render_requirements(spec, extra_context),
+            "main.py": self.render_runtime(spec, extra_context, project_root=project_root),
+            "Dockerfile": self.render_dockerfile(spec, extra_context, project_root=project_root),
+            "requirements.txt": self.render_requirements(
+                spec, extra_context, project_root=project_root
+            ),
         }
 
     def list_templates(self) -> List[str]:
@@ -471,4 +679,5 @@ __all__ = [
     "get_renderer",
     "DOCKRION_VERSION",
     "TEMPLATE_FILES",
+    "DependencyConflictError",
 ]

@@ -167,13 +167,28 @@ def create_app(
         f"{agent_name_clean}Output", spec.io_schema.output if spec.io_schema else None
     )
 
+    # Determine if output validation should be strict
+    # Default to True; False if io_schema.strict is False or output is None
+    strict_output = True
+    if spec.io_schema:
+        # Check strict flag (defaults to True)
+        strict_output = getattr(spec.io_schema, "strict", True)
+        # Also skip validation if output schema is not defined
+        if spec.io_schema.output is None:
+            strict_output = False
+
     # Register routers
     app.include_router(create_welcome_router(config))
     app.include_router(create_health_router(config, state))
     app.include_router(create_info_router(config, spec))
     app.include_router(
         create_invoke_router(
-            config, state, verify_auth, input_model=InputModel, output_model=OutputModel
+            config,
+            state,
+            verify_auth,
+            input_model=InputModel,
+            output_model=OutputModel,
+            strict_output_validation=strict_output,
         )
     )
 

@@ -32,6 +32,7 @@ from .errors import (
     InvalidOutputError,
     ModuleNotFoundError,
 )
+from .serialization import serialize_for_json
 
 logger = get_logger("langgraph-adapter")
 
@@ -501,14 +502,17 @@ class LangGraphAdapter:
                 actual_type=type(result),
             )
 
-        # Step 5: Log success
+        # Step 6: Deep serialize result to ensure JSON-serializable output
+        result = serialize_for_json(result)
+
+        # Step 7: Log success
         logger.debug(
             "LangGraph agent invocation completed",
             entrypoint=self._entrypoint,
             output_keys=list(result.keys()),
         )
 
-        # Step 6: Return result
+        # Step 8: Return result
         return result
 
     def get_metadata(self) -> Dict[str, Any]:

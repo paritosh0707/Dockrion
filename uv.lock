@@ -415,39 +415,67 @@ wheels = [
 
 [[package]]
 name = "dockrion"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "packages/dockrion" }
 dependencies = [
-    { name = "dockrion-cli" },
+    { name = "jinja2" },
+    { name = "pydantic" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "rich" },
+    { name = "typer" },
 ]
 
 [package.optional-dependencies]
 all = [
-    { name = "dockrion-cli" },
-    { name = "dockrion-runtime" },
-    { name = "dockrion-sdk" },
+    { name = "fastapi" },
+    { name = "langchain" },
+    { name = "langchain-core" },
+    { name = "langgraph" },
+    { name = "prometheus-client" },
+    { name = "pyjwt", extra = ["crypto"] },
+    { name = "uvicorn", extra = ["standard"] },
+]
+jwt = [
+    { name = "pyjwt", extra = ["crypto"] },
+]
+langchain = [
+    { name = "langchain" },
+    { name = "langchain-core" },
+]
+langgraph = [
+    { name = "langchain-core" },
+    { name = "langgraph" },
 ]
 runtime = [
-    { name = "dockrion-runtime" },
-]
-sdk = [
-    { name = "dockrion-sdk" },
+    { name = "fastapi" },
+    { name = "prometheus-client" },
+    { name = "uvicorn", extra = ["standard"] },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "dockrion-cli", editable = "packages/cli" },
-    { name = "dockrion-cli", marker = "extra == 'all'", editable = "packages/cli" },
-    { name = "dockrion-runtime", marker = "extra == 'all'", editable = "packages/runtime" },
-    { name = "dockrion-runtime", marker = "extra == 'runtime'", editable = "packages/runtime" },
-    { name = "dockrion-sdk", marker = "extra == 'all'", editable = "packages/sdk-python" },
-    { name = "dockrion-sdk", marker = "extra == 'sdk'", editable = "packages/sdk-python" },
+    { name = "dockrion", extras = ["langgraph", "langchain", "runtime", "jwt"], marker = "extra == 'all'", editable = "packages/dockrion" },
+    { name = "fastapi", marker = "extra == 'runtime'", specifier = ">=0.109.0" },
+    { name = "jinja2", specifier = ">=3.1.0" },
+    { name = "langchain", marker = "extra == 'langchain'", specifier = ">=0.1.0" },
+    { name = "langchain-core", marker = "extra == 'langchain'", specifier = ">=0.1.0" },
+    { name = "langchain-core", marker = "extra == 'langgraph'", specifier = ">=0.1.0" },
+    { name = "langgraph", marker = "extra == 'langgraph'", specifier = ">=0.0.20" },
+    { name = "prometheus-client", marker = "extra == 'runtime'", specifier = ">=0.20" },
+    { name = "pydantic", specifier = ">=2.5" },
+    { name = "pyjwt", extras = ["crypto"], marker = "extra == 'jwt'", specifier = ">=2.8.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "requests", specifier = ">=2.31" },
+    { name = "rich", specifier = ">=13.7.0" },
+    { name = "typer", specifier = ">=0.12.0" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'runtime'", specifier = ">=0.27.0" },
 ]
-provides-extras = ["sdk", "runtime", "all"]
+provides-extras = ["langgraph", "langchain", "runtime", "jwt", "all"]
 
 [[package]]
 name = "dockrion-adapters"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "packages/adapters" }
 dependencies = [
     { name = "dockrion-common" },
@@ -505,10 +533,11 @@ provides-extras = ["langgraph", "langchain", "all", "dev", "test"]
 
 [[package]]
 name = "dockrion-cli"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "packages/cli" }
 dependencies = [
     { name = "dockrion-sdk" },
+    { name = "pyyaml" },
     { name = "rich" },
     { name = "typer" },
 ]
@@ -537,6 +566,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=4.1.0" },
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.11.0" },
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.11.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "rich", specifier = ">=13.7.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "typer", specifier = ">=0.12.0" },
@@ -545,7 +575,7 @@ provides-extras = ["dev", "test"]
 
 [[package]]
 name = "dockrion-common"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "packages/common-py" }
 dependencies = [
     { name = "pydantic" },
@@ -579,7 +609,7 @@ provides-extras = ["dev", "test"]
 
 [[package]]
 name = "dockrion-policy"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "packages/policy-engine" }
 dependencies = [
     { name = "dockrion-common" },
@@ -611,7 +641,7 @@ provides-extras = ["dev", "test"]
 
 [[package]]
 name = "dockrion-runtime"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "packages/runtime" }
 dependencies = [
     { name = "dockrion-adapters" },
@@ -671,7 +701,7 @@ provides-extras = ["jwt", "all", "dev", "test"]
 
 [[package]]
 name = "dockrion-schema"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "packages/schema" }
 dependencies = [
     { name = "dockrion-common" },
@@ -715,7 +745,7 @@ provides-extras = ["yaml", "dev", "test"]
 
 [[package]]
 name = "dockrion-sdk"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "packages/sdk-python" }
 dependencies = [
     { name = "dockrion-adapters" },
@@ -763,7 +793,7 @@ provides-extras = ["dev", "test"]
 
 [[package]]
 name = "dockrion-telemetry"
-version = "0.0.1"
+version = "0.0.2"
 source = { editable = "packages/telemetry" }
 dependencies = [
     { name = "prometheus-client" },

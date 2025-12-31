@@ -28,6 +28,7 @@ def create_invoke_router(
     auth_dependency: Callable[[Request], Awaitable[AuthContext]],
     input_model: Type[BaseModel],
     output_model: Type[BaseModel],
+    strict_output_validation: bool = True,
 ) -> APIRouter:
     """
     Create router for invoke endpoints.
@@ -124,11 +125,17 @@ def create_invoke_router(
 
             logger.info(f"✅ Invoke completed in {latency:.3f}s")
 
-            # Validate output against schema and return typed response
-            try:
-                typed_output: Any = output_model(**result) if isinstance(result, dict) else result
-            except Exception:
-                # If output doesn't match schema, use raw result
+            # Validate output against schema (if strict mode enabled)
+            if strict_output_validation:
+                try:
+                    typed_output: Any = (
+                        output_model(**result) if isinstance(result, dict) else result
+                    )
+                except Exception:
+                    # If output doesn't match schema, use raw result
+                    typed_output = result
+            else:
+                # Lenient mode: skip output validation
                 typed_output = result
 
             return InvokeResponseModel(

@@ -71,6 +71,9 @@ from .handler_adapter import HandlerAdapter
 # Concrete adapter implementations
 from .langgraph_adapter import LangGraphAdapter
 
+# Serialization utilities
+from .serialization import deep_serialize, serialize_for_json
+
 # Factory and registry functions
 from .registry import (
     get_adapter,
@@ -92,6 +95,9 @@ __all__ = [
     # Adapters
     "LangGraphAdapter",
     "HandlerAdapter",
+    # Serialization
+    "deep_serialize",
+    "serialize_for_json",
     # Factory
     "get_adapter",
     "get_handler_adapter",
