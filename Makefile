@@ -42,36 +42,15 @@ help:
 
 # Install all packages in editable mode (for users)
 bootstrap:
-	pip install -e packages/common-py \
-	            -e packages/schema \
-	            -e packages/adapters \
-	            -e packages/policy-engine \
-	            -e packages/telemetry \
-	            -e packages/runtime \
-	            -e packages/sdk-python \
-	            -e packages/cli
+	uv sync
 
 # Install all packages with dev dependencies (for developers)
 bootstrap-dev:
-	pip install -e "packages/common-py[dev]" \
-	            -e "packages/schema[dev]" \
-	            -e "packages/adapters[dev]" \
-	            -e "packages/policy-engine[dev]" \
-	            -e "packages/telemetry[dev]" \
-	            -e "packages/runtime[dev]" \
-	            -e "packages/sdk-python[dev]" \
-	            -e "packages/cli[dev]"
+	uv sync --group dev --extra dev
 
 # Install test dependencies only (for CI or quick testing)
 bootstrap-test:
-	pip install -e "packages/common-py[test]" \
-	            -e "packages/schema[test]" \
-	            -e "packages/adapters[test]" \
-	            -e "packages/policy-engine[test]" \
-	            -e "packages/telemetry[test]" \
-	            -e "packages/runtime[test]" \
-	            -e "packages/sdk-python[test]" \
-	            -e "packages/cli[test]"
+	uv sync --group test --extra test
 
 # Run all tests (sequentially per package to avoid import conflicts)
 test:
@@ -140,14 +119,24 @@ lint:
 
 # Type checking
 typecheck:
-	mypy packages/common-py/dockrion_common \
-	     packages/schema/dockrion_schema \
-	     packages/adapters/dockrion_adapters \
-	     packages/policy-engine/dockrion_policy \
-	     packages/telemetry/dockrion_telemetry \
-	     packages/runtime/dockrion_runtime \
-	     packages/sdk-python/dockrion_sdk \
-	     --ignore-missing-imports
+	@echo "=== Type checking common-py ===" && \
+	uv run mypy packages/common-py --ignore-missing-imports --explicit-package-bases && \
+	echo "=== Type checking schema ===" && \
+	uv run mypy packages/schema --ignore-missing-imports --explicit-package-bases && \
+	echo "=== Type checking adapters ===" && \
+	uv run mypy packages/adapters --ignore-missing-imports --explicit-package-bases && \
+	echo "=== Type checking policy-engine ===" && \
+	uv run mypy packages/policy-engine/dockrion_policy --ignore-missing-imports && \
+	MYPYPATH=packages/policy-engine uv run mypy packages/policy-engine/tests --ignore-missing-imports && \
+	echo "=== Type checking telemetry ===" && \
+	uv run mypy packages/telemetry --ignore-missing-imports --explicit-package-bases && \
+	echo "=== Type checking runtime ===" && \
+	uv run mypy packages/runtime --ignore-missing-imports --explicit-package-bases && \
+	echo "=== Type checking sdk-python ===" && \
+	uv run mypy packages/sdk-python --ignore-missing-imports --explicit-package-bases && \
+	echo "=== Type checking cli ===" && \
+	uv run mypy packages/cli --ignore-missing-imports --explicit-package-bases && \
+	echo "=== All type checks passed! ==="
 
 # Format code
 format:
@@ -209,6 +198,7 @@ clean:
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name "htmlcov" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name "build" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name ".coverage" -delete 2>/dev/null || true

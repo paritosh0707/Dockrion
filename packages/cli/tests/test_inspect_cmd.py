@@ -78,9 +78,7 @@ class TestInferJsonSchema:
         assert "value" not in schema["required"]
 
     def test_infer_nested_object(self):
-        data = {
-            "messages": [{"type": "human", "content": "Hello"}]
-        }
+        data = {"messages": [{"type": "human", "content": "Hello"}]}
         schema = infer_json_schema(data)
 
         assert schema["type"] == "object"
@@ -168,9 +166,7 @@ class TestInspectCommand:
 
     def test_inspect_invalid_json_payload(self, sample_dockfile):
         """Test inspect with invalid JSON payload fails."""
-        result = runner.invoke(
-            app, ["inspect", sample_dockfile, "--payload", "{invalid json}"]
-        )
+        result = runner.invoke(app, ["inspect", sample_dockfile, "--payload", "{invalid json}"])
         assert result.exit_code == 1
         assert "invalid" in result.stdout.lower()
 
@@ -204,9 +200,7 @@ class TestInspectCommand:
 
     def test_inspect_basic(self, sample_dockfile):
         """Test basic inspect command."""
-        result = runner.invoke(
-            app, ["inspect", sample_dockfile, "--payload", '{"text": "test"}']
-        )
+        result = runner.invoke(app, ["inspect", sample_dockfile, "--payload", '{"text": "test"}'])
         # Should succeed or fail gracefully with agent error
         # The mock agent should work
         if result.exit_code == 0:
@@ -214,9 +208,7 @@ class TestInspectCommand:
 
     def test_inspect_with_payload_file(self, sample_dockfile, test_payload):
         """Test inspect with payload from file."""
-        result = runner.invoke(
-            app, ["inspect", sample_dockfile, "--payload-file", test_payload]
-        )
+        result = runner.invoke(app, ["inspect", sample_dockfile, "--payload-file", test_payload])
         # Should succeed or fail gracefully
         if result.exit_code == 0:
             assert "success" in result.stdout.lower() or "output" in result.stdout.lower()
@@ -292,4 +284,3 @@ class TestInspectCommandHelp:
         assert result.exit_code == 0
         # Help should mention usage patterns
         assert "payload" in result.stdout.lower()
-

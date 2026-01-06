@@ -11,6 +11,7 @@ Demonstrates:
 
 import sys
 from pathlib import Path
+from typing import Optional
 
 # Add current directory to Python path for mock agent imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -38,7 +39,7 @@ def build_demo_agent():
     """Mock agent for demonstration"""
 
     class DemoAgent:
-        def invoke(self, payload: dict, config: dict = None) -> dict:
+        def invoke(self, payload: dict, config: Optional[dict] = None) -> dict:
             return {
                 "output": f"Processed: {payload.get('input')}",
                 "config_used": config is not None,
@@ -51,7 +52,7 @@ def build_demo_agent():
 import types
 
 demo_module = types.ModuleType("demo_agent_module")
-demo_module.build_demo_agent = build_demo_agent
+demo_module.build_demo_agent = build_demo_agent  # type: ignore[attr-defined]
 sys.modules["demo_agent_module"] = demo_module
 
 print("\n1️⃣  Duck Typing (Default - No strict validation)")
@@ -101,7 +102,7 @@ def build_stateful_agent():
         def __init__(self):
             self.conversations = {}
 
-        def invoke(self, payload: dict, config: dict = None) -> dict:
+        def invoke(self, payload: dict, config: Optional[dict] = None) -> dict:
             thread_id = config.get("thread_id") if config else None
             query = payload.get("query", "")
 
@@ -130,7 +131,7 @@ def build_stateful_agent():
 
 # Register stateful agent
 stateful_module = types.ModuleType("stateful_agent_module")
-stateful_module.build_stateful_agent = build_stateful_agent
+stateful_module.build_stateful_agent = build_stateful_agent  # type: ignore[attr-defined]
 sys.modules["stateful_agent_module"] = stateful_module
 
 print("\n1️⃣  Load Agent and Check Config Support")
@@ -222,7 +223,7 @@ def build_with_config():
     """Agent that supports config"""
 
     class ConfigAgent:
-        def invoke(self, payload: dict, config: dict = None) -> dict:
+        def invoke(self, payload: dict, config: Optional[dict] = None) -> dict:
             return {"result": "config-aware response", "config_received": config is not None}
 
     return ConfigAgent()
@@ -230,11 +231,11 @@ def build_with_config():
 
 # Register agents
 simple_module = types.ModuleType("simple_module")
-simple_module.build_simple_no_config = build_simple_no_config
+simple_module.build_simple_no_config = build_simple_no_config  # type: ignore[attr-defined]
 sys.modules["simple_module"] = simple_module
 
 config_module = types.ModuleType("config_module")
-config_module.build_with_config = build_with_config
+config_module.build_with_config = build_with_config  # type: ignore[attr-defined]
 sys.modules["config_module"] = config_module
 
 print("\n1️⃣  Agent WITHOUT Config Parameter")
@@ -317,7 +318,7 @@ def build_invalid_agent():
 
 
 invalid_module = types.ModuleType("invalid_module")
-invalid_module.build_invalid_agent = build_invalid_agent
+invalid_module.build_invalid_agent = build_invalid_agent  # type: ignore[attr-defined]
 sys.modules["invalid_module"] = invalid_module
 
 try:

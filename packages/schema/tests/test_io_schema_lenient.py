@@ -257,4 +257,3 @@ class TestLenientModeUseCases:
         assert spec.io_schema.input is not None
         assert spec.io_schema.output is None
         # Strict defaults to True but output is None so validation would be skipped
-

@@ -30,20 +30,20 @@ class TestTemplateLocation:
         # Check directory structure exists
         assert templates_dir.exists(), "Templates directory should exist"
         assert (templates_dir / "dockerfiles").exists(), "dockerfiles subdirectory should exist"
-        assert (
-            templates_dir / "runtime-fastapi"
-        ).exists(), "runtime-fastapi subdirectory should exist"
+        assert (templates_dir / "runtime-fastapi").exists(), (
+            "runtime-fastapi subdirectory should exist"
+        )
 
         # Check all template files exist
-        assert (
-            templates_dir / "dockerfiles" / "Dockerfile.j2"
-        ).exists(), "Dockerfile.j2 should exist"
-        assert (
-            templates_dir / "runtime-fastapi" / "main.py.j2"
-        ).exists(), "main.py.j2 should exist"
-        assert (
-            templates_dir / "runtime-fastapi" / "requirements.txt.j2"
-        ).exists(), "requirements.txt.j2 should exist"
+        assert (templates_dir / "dockerfiles" / "Dockerfile.j2").exists(), (
+            "Dockerfile.j2 should exist"
+        )
+        assert (templates_dir / "runtime-fastapi" / "main.py.j2").exists(), (
+            "main.py.j2 should exist"
+        )
+        assert (templates_dir / "runtime-fastapi" / "requirements.txt.j2").exists(), (
+            "requirements.txt.j2 should exist"
+        )
 
     def test_template_path_resolution(self):
         """Test that DEFAULT_TEMPLATE_DIRS points to the correct location."""
@@ -53,9 +53,9 @@ class TestTemplateLocation:
         package_templates_dir = DEFAULT_TEMPLATE_DIRS[1]
 
         assert package_templates_dir.exists(), "Package templates directory should exist"
-        assert (
-            package_templates_dir / "dockerfiles" / "Dockerfile.j2"
-        ).exists(), "Should find Dockerfile.j2"
+        assert (package_templates_dir / "dockerfiles" / "Dockerfile.j2").exists(), (
+            "Should find Dockerfile.j2"
+        )
 
     def test_template_files_mapping(self):
         """Test that TEMPLATE_FILES maps to existing files."""
@@ -391,4 +391,3 @@ expose:
         # Dev mode should copy local packages
         assert "Development mode" in dockerfile or "local packages" in dockerfile.lower()
         assert "packages/common-py" in dockerfile
-

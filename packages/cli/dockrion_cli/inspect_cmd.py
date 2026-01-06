@@ -17,11 +17,11 @@ from .utils import console, error, handle_error, info, success, warning
 def infer_json_schema(value: Any, required: bool = True) -> Dict[str, Any]:
     """
     Infer JSON Schema from a Python value.
-    
+
     Args:
         value: Any Python value (after serialization)
         required: Whether to mark fields as required
-        
+
     Returns:
         JSON Schema dictionary
     """
@@ -78,11 +78,11 @@ def generate_io_schema_yaml(
 ) -> str:
     """
     Generate io_schema YAML section from input/output data.
-    
+
     Args:
         input_data: Sample input payload
         output_data: Actual output from agent
-        
+
     Returns:
         YAML string for io_schema section
     """
@@ -106,9 +106,7 @@ def generate_io_schema_yaml(
 
 def inspect(
     path: str = typer.Argument("Dockfile.yaml", help="Path to Dockfile"),
-    payload: Optional[str] = typer.Option(
-        None, "--payload", "-p", help="JSON payload as string"
-    ),
+    payload: Optional[str] = typer.Option(None, "--payload", "-p", help="JSON payload as string"),
     payload_file: Optional[str] = typer.Option(
         None, "--payload-file", "-f", help="Path to JSON file with payload"
     ),
@@ -125,20 +123,20 @@ def inspect(
 ):
     """
     Inspect agent output and optionally generate io_schema.
-    
+
     This command helps you understand what your agent returns and
     automatically generates the io_schema section for your Dockfile.
-    
+
     Examples:
         # See what your agent returns (serialized)
         dockrion inspect --payload '{"text": "hello"}'
-        
+
         # Generate io_schema from actual output
         dockrion inspect -p '{"text": "hello"}' --generate-schema
-        
+
         # Save generated schema to file
         dockrion inspect -p '{"text": "hello"}' -g -o io_schema.yaml
-        
+
         # With payload from file
         dockrion inspect -f input.json --generate-schema
     """
@@ -235,7 +233,7 @@ def inspect(
                         f.write(schema_yaml)
                     success(f"Schema saved to {output_file}")
                     console.print(
-                        f"\n[dim]💡 Copy the io_schema section to your Dockfile.yaml[/dim]"
+                        "\n[dim]💡 Copy the io_schema section to your Dockfile.yaml[/dim]"
                     )
 
             except ImportError as e:
@@ -259,4 +257,3 @@ def inspect(
     except Exception as e:
         handle_error(e, verbose)
         raise typer.Exit(1)
-

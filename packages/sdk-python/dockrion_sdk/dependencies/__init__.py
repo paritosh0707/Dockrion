@@ -46,4 +46,3 @@ __all__ = [
     "DependencyMerger",
     "merge_dependencies",
 ]
-

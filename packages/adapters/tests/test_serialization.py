@@ -6,7 +6,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import pytest
 
@@ -71,6 +71,7 @@ class TestCollections:
 
     def test_set(self):
         result = deep_serialize({3, 1, 2})
+        assert isinstance(result, list)
         assert sorted(result) == [1, 2, 3]
 
     def test_set_empty(self):
@@ -78,6 +79,7 @@ class TestCollections:
 
     def test_frozenset(self):
         result = deep_serialize(frozenset([3, 1, 2]))
+        assert isinstance(result, list)
         assert sorted(result) == [1, 2, 3]
 
     def test_dict(self):
@@ -142,6 +144,7 @@ class TestSpecialTypes:
     def test_path_relative(self):
         p = Path("src/main.py")
         result = deep_serialize(p)
+        assert isinstance(result, str)
         assert "src" in result and "main.py" in result
 
     def test_bytes_utf8(self):
@@ -151,7 +154,8 @@ class TestSpecialTypes:
     def test_bytes_binary(self):
         b = bytes([0xFF, 0xFE, 0x00])
         result = deep_serialize(b)
-        assert "<bytes:" in result or isinstance(result, str)
+        assert isinstance(result, str)
+        assert "<bytes:" in result
 
 
 class TestEnum:
@@ -264,6 +268,7 @@ class TestPydanticModels:
 
         config = Config(name="test")
         result = deep_serialize(config)
+        assert isinstance(result, dict)
         assert result["name"] == "test"
         assert result.get("debug") is None
 
@@ -273,7 +278,7 @@ class TestLangChainMessages:
 
     def test_human_message(self):
         langchain = pytest.importorskip("langchain_core")
-        from langchain_core.messages import HumanMessage
+        from langchain_core.messages import HumanMessage  # type: ignore[import-untyped]
 
         msg = HumanMessage(content="Hello, world!")
         result = deep_serialize(msg)
@@ -284,7 +289,7 @@ class TestLangChainMessages:
 
     def test_ai_message(self):
         langchain = pytest.importorskip("langchain_core")
-        from langchain_core.messages import AIMessage
+        from langchain_core.messages import AIMessage  # type: ignore[import-untyped]
 
         msg = AIMessage(content="I'm an AI assistant.")
         result = deep_serialize(msg)
@@ -295,7 +300,7 @@ class TestLangChainMessages:
 
     def test_message_list(self):
         langchain = pytest.importorskip("langchain_core")
-        from langchain_core.messages import AIMessage, HumanMessage
+        from langchain_core.messages import AIMessage, HumanMessage  # type: ignore[import-untyped]
 
         messages = [
             HumanMessage(content="Hi"),
@@ -311,7 +316,7 @@ class TestLangChainMessages:
 
     def test_system_message(self):
         langchain = pytest.importorskip("langchain_core")
-        from langchain_core.messages import SystemMessage
+        from langchain_core.messages import SystemMessage  # type: ignore[import-untyped]
 
         msg = SystemMessage(content="You are a helpful assistant.")
         result = deep_serialize(msg)
@@ -334,6 +339,7 @@ class TestCustomClasses:
         obj = Custom()
         result = deep_serialize(obj)
 
+        assert isinstance(result, dict)
         assert result == {"name": "test", "value": 42}
         assert "_private" not in result
 
@@ -372,11 +378,11 @@ class TestEdgeCases:
     def test_max_depth(self):
         """Test that max depth prevents infinite recursion."""
         # Create deeply nested structure
-        deep = {"level": 0}
-        current = deep
+        deep: dict[str, Any] = {"level": 0}
+        current: dict[str, Any] = deep
         for i in range(100):
             current["nested"] = {"level": i + 1}
-            current = current["nested"]
+            current = current["nested"]  # type: ignore[assignment]
 
         # Should not raise, should truncate
         result = deep_serialize(deep, max_depth=10)
@@ -395,12 +401,16 @@ class TestEdgeCases:
             pass
 
         result = deep_serialize(my_func)
+        assert isinstance(result, str)
         assert "<callable:" in result
         assert "my_func" in result
 
     def test_lambda(self):
-        my_lambda = lambda x: x + 1
+        def my_lambda(x):
+            return x + 1
+
         result = deep_serialize(my_lambda)
+        assert isinstance(result, str)
         assert "<callable:" in result
 
     def test_non_string_dict_keys(self):
@@ -412,6 +422,7 @@ class TestEdgeCases:
     def test_mixed_dict_keys(self):
         data = {1: "one", "two": 2, (3, 4): "tuple"}
         result = deep_serialize(data)
+        assert isinstance(result, dict)
         assert "1" in result
         assert "two" in result
         assert "(3, 4)" in result
@@ -463,7 +474,7 @@ class TestSerializeForJson:
 
     def test_with_langchain_messages(self):
         langchain = pytest.importorskip("langchain_core")
-        from langchain_core.messages import AIMessage, HumanMessage
+        from langchain_core.messages import AIMessage, HumanMessage  # type: ignore[import-untyped]
 
         data = {
             "messages": [
@@ -484,7 +495,7 @@ class TestIntegrationScenarios:
     def test_langgraph_chat_output(self):
         """Test typical LangGraph chat agent output."""
         langchain = pytest.importorskip("langchain_core")
-        from langchain_core.messages import AIMessage, HumanMessage
+        from langchain_core.messages import AIMessage, HumanMessage  # type: ignore[import-untyped]
 
         # Simulate LangGraph chat output
         output = {
@@ -514,9 +525,7 @@ class TestIntegrationScenarios:
         output = {
             "status": "success",
             "data": [1, 2, 3],
-            "metadata": Metadata(
-                created_at=datetime(2024, 12, 31, 12, 0, 0), version="1.0.0"
-            ),
+            "metadata": Metadata(created_at=datetime(2024, 12, 31, 12, 0, 0), version="1.0.0"),
             "id": uuid.UUID("12345678-1234-5678-1234-567812345678"),
         }
 
@@ -527,4 +536,3 @@ class TestIntegrationScenarios:
         assert result["metadata"]["created_at"] == "2024-12-31T12:00:00"
         assert result["metadata"]["version"] == "1.0.0"
         assert result["id"] == "12345678-1234-5678-1234-567812345678"
-

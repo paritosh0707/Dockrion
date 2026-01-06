@@ -144,8 +144,7 @@ def deploy(
 
     if dev_mode and not workspace_root:
         logger.warning(
-            "Development mode requested but not in a workspace. "
-            "Falling back to PyPI installation."
+            "Development mode requested but not in a workspace. Falling back to PyPI installation."
         )
         dev_mode = False
 

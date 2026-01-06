@@ -353,7 +353,9 @@ def init(
 
         # Validate streaming mode
         if streaming not in STREAMING_MODES:
-            error(f"Invalid streaming mode: '{streaming}'. Valid options: {', '.join(STREAMING_MODES)}")
+            error(
+                f"Invalid streaming mode: '{streaming}'. Valid options: {', '.join(STREAMING_MODES)}"
+            )
             raise typer.Exit(1)
 
         output_path = Path(output)

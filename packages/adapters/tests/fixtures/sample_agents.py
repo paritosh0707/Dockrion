@@ -5,7 +5,7 @@ Provides mock agents that simulate LangGraph and other framework agents
 without requiring actual framework dependencies.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 
 def build_simple_agent():
@@ -47,7 +47,7 @@ def build_stateful_agent():
         def __init__(self):
             self.state = {}
 
-        def invoke(self, payload: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+        def invoke(self, payload: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
             """Invoke with optional config"""
             thread_id = config.get("thread_id") if config else None
 
@@ -72,7 +72,7 @@ def build_config_agent():
     """
 
     class ConfigAgent:
-        def invoke(self, payload: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+        def invoke(self, payload: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
             """Invoke with config support"""
             result = {
                 "output": payload.get("input", "no input"),

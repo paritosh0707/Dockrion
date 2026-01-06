@@ -248,9 +248,7 @@ def test_init_secret_names_normalized(tmp_path, monkeypatch):
 def test_init_auth_adds_secret(tmp_path, monkeypatch):
     """Test that api_key auth adds MY_AGENT_KEY to secrets when --secrets is used."""
     monkeypatch.chdir(tmp_path)
-    result = runner.invoke(
-        app, ["init", "test-agent", "--auth", "api_key", "--secrets", "-f"]
-    )
+    result = runner.invoke(app, ["init", "test-agent", "--auth", "api_key", "--secrets", "-f"])
     assert result.exit_code == 0
     content = yaml.safe_load(Path("Dockfile.yaml").read_text())
     secret_names = [s["name"] for s in content["secrets"]["required"]]
@@ -406,9 +404,7 @@ def test_init_handler_with_auth(tmp_path, monkeypatch):
 def test_init_shows_configuration_summary(tmp_path, monkeypatch):
     """Test init shows configuration summary."""
     monkeypatch.chdir(tmp_path)
-    result = runner.invoke(
-        app, ["init", "test-agent", "--auth", "api_key", "--cors", "-f"]
-    )
+    result = runner.invoke(app, ["init", "test-agent", "--auth", "api_key", "--cors", "-f"])
     assert result.exit_code == 0
     assert "Configuration:" in result.output
     assert "Mode:" in result.output

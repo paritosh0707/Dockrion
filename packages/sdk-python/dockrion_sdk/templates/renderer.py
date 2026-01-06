@@ -557,9 +557,7 @@ class TemplateRenderer:
         result = self.render(template_file, context)
         return result
 
-    def _generate_merged_requirements_content(
-        self, spec: DockSpec, context: Dict[str, Any]
-    ) -> str:
+    def _generate_merged_requirements_content(self, spec: DockSpec, context: Dict[str, Any]) -> str:
         """
         Generate requirements.txt content from merged dependencies.
 

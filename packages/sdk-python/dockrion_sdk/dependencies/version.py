@@ -268,4 +268,3 @@ def _get_constraint_range(
             max_ver = c.version
 
     return min_ver, max_ver
-

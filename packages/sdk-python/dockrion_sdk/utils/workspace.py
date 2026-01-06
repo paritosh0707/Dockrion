@@ -111,10 +111,12 @@ def detect_local_packages(workspace_root: Path) -> Optional[List[dict]]:
         if pkg_path.exists() and (
             (pkg_path / "pyproject.toml").exists() or (pkg_path / "setup.py").exists()
         ):
-            local_packages.append({
-                "name": dir_name,
-                "path": f"packages/{dir_name}",  # Relative to workspace root
-            })
+            local_packages.append(
+                {
+                    "name": dir_name,
+                    "path": f"packages/{dir_name}",  # Relative to workspace root
+                }
+            )
             logger.debug(f"Found local package: {pkg_name} at packages/{dir_name}")
 
     return local_packages if local_packages else None

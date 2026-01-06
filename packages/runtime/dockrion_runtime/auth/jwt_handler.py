@@ -336,7 +336,7 @@ class JWTAuthHandler(BaseAuthHandler):
 
         Called periodically or on key verification failure.
         """
-        if self._jwks_client:
+        if self._jwks_client and self.config.jwt_jwks_url:
             try:
                 # PyJWKClient handles caching internally
                 # We just need to clear its cache

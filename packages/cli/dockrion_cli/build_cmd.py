@@ -182,7 +182,9 @@ def build(
                 f"     [dim]Or use an env file:[/dim] [cyan]docker run -p {expose_port}:{expose_port} --env-file .env {result['image']}[/cyan]"
             )
             console.print()
-            console.print("     [yellow]⚠️  Required secrets (must be provided at runtime):[/yellow]")
+            console.print(
+                "     [yellow]⚠️  Required secrets (must be provided at runtime):[/yellow]"
+            )
             for secret in required_secrets:
                 desc = f" - {secret.description}" if secret.description else ""
                 console.print(f"        [dim]• {secret.name}{desc}[/dim]")

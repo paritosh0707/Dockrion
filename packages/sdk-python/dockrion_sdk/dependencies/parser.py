@@ -202,4 +202,3 @@ def parse_requirements_file(file_path: Path) -> List[Requirement]:
 
     content = file_path.read_text(encoding="utf-8")
     return parse_requirements_string(content)
-

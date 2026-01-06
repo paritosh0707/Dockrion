@@ -42,9 +42,9 @@ def _generate_welcome_html(config: RuntimeConfig) -> str:
     """Generate the welcome page HTML with Dockrion branding."""
 
     # Use the actual Dockrion logo image from static files
-    logo_html = '''<img src="/static/dockrion-logo.png" alt="Dockrion Logo" class="logo-img">'''
+    logo_html = """<img src="/static/dockrion-logo.png" alt="Dockrion Logo" class="logo-img">"""
 
-    return f'''<!DOCTYPE html>
+    return f"""<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
@@ -585,5 +585,4 @@ def _generate_welcome_html(config: RuntimeConfig) -> str:
         }})();
     </script>
 </body>
-</html>'''
-
+</html>"""

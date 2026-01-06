@@ -182,7 +182,7 @@ class DependencyConflictError(Exception):
         hint_text = ""
         if self.resolution_hints:
             hint_text = "\n\nHow to resolve:\n" + "\n".join(
-                f"  {i+1}. {h}" for i, h in enumerate(self.resolution_hints)
+                f"  {i + 1}. {h}" for i, h in enumerate(self.resolution_hints)
             )
 
         full_message = (
@@ -436,4 +436,3 @@ def resolve_version_conflict(
 
     resolver = VersionResolver()
     return resolver.resolve(user_req, dockrion_constraint)
-
