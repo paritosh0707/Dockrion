@@ -17,6 +17,7 @@ members = [
 
 [manifest.dependency-groups]
 dev = [
+    { name = "pypiserver", specifier = ">=2.4.0" },
     { name = "pytest", specifier = ">=9.0.0" },
     { name = "ruff", specifier = ">=0.14.5" },
 ]
@@ -84,6 +85,20 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/de/63/d45ef97ada84111e330b2b2d45e1dd163e90bd116f00ac55927fb6bf8adb/black-25.11.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5bd4a22a0b37401c8e492e994bce79e614f91b14d9ea911f44f36e262195fdda", size = 1680571, upload-time = "2025-11-10T01:57:04.239Z" },
     { url = "https://files.pythonhosted.org/packages/ff/4b/5604710d61cdff613584028b4cb4607e56e148801ed9b38ee7970799dab6/black-25.11.0-cp314-cp314-win_amd64.whl", hash = "sha256:aa211411e94fdf86519996b7f5f05e71ba34835d8f0c0f03c00a26271da02664", size = 1382599, upload-time = "2025-11-10T01:57:57.427Z" },
     { url = "https://files.pythonhosted.org/packages/00/5d/aed32636ed30a6e7f9efd6ad14e2a0b0d687ae7c8c7ec4e4a557174b895c/black-25.11.0-py3-none-any.whl", hash = "sha256:e3f562da087791e96cefcd9dda058380a442ab322a02e222add53736451f604b", size = 204918, upload-time = "2025-11-10T01:53:48.917Z" },
+]
+
+[[package]]
+name = "build"
+version = "1.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama", marker = "os_name == 'nt'" },
+    { name = "packaging" },
+    { name = "pyproject-hooks" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/25/1c/23e33405a7c9eac261dff640926b8b5adaed6a6eb3e1767d441ed611d0c0/build-1.3.0.tar.gz", hash = "sha256:698edd0ea270bde950f53aed21f3a0135672206f3911e0176261a31e0e07b397", size = 48544, upload-time = "2025-08-01T21:27:09.268Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/8c/2b30c12155ad8de0cf641d76a8b396a16d2c36bc6d50b621a62b7c4567c1/build-1.3.0-py3-none-any.whl", hash = "sha256:7145f0b5061ba90a1500d60bd1b13ca0a8a4cebdd0cc16ed8adf1c0e739f43b4", size = 23382, upload-time = "2025-08-01T21:27:07.844Z" },
 ]
 
 [[package]]
@@ -453,6 +468,12 @@ runtime = [
     { name = "uvicorn", extra = ["standard"] },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "build" },
+    { name = "pypiserver" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "dockrion", extras = ["langgraph", "langchain", "runtime", "jwt"], marker = "extra == 'all'", editable = "packages/dockrion" },
@@ -472,6 +493,12 @@ requires-dist = [
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'runtime'", specifier = ">=0.27.0" },
 ]
 provides-extras = ["langgraph", "langchain", "runtime", "jwt", "all"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "build", specifier = ">=1.3.0" },
+    { name = "pypiserver", specifier = ">=2.4.0" },
+]
 
 [[package]]
 name = "dockrion-adapters"
@@ -921,6 +948,15 @@ wheels = [
 ]
 
 [[package]]
+name = "importlib-resources"
+version = "6.5.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cf/8c/f834fbf984f691b4f7ff60f50b514cc3de5cc08abfc3295564dd89c5e2e7/importlib_resources-6.5.2.tar.gz", hash = "sha256:185f87adef5bcc288449d98fb4fba07cea78bc036455dd44c5fc4a2fe78fed2c", size = 44693, upload-time = "2025-01-03T18:51:56.698Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a4/ed/1f1afb2e9e7f38a545d628f864d562a5ae64fe6f7a10e28ffb9b185b4e89/importlib_resources-6.5.2-py3-none-any.whl", hash = "sha256:789cfdc3ed28c78b67a06acb8126751ced69a3d5f79c095a98298cd8a760ccec", size = 37461, upload-time = "2025-01-03T18:51:54.306Z" },
+]
+
+[[package]]
 name = "iniconfig"
 version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1344,6 +1380,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pip"
+version = "25.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fe/6e/74a3f0179a4a73a53d66ce57fdb4de0080a8baa1de0063de206d6167acc2/pip-25.3.tar.gz", hash = "sha256:8d0538dbbd7babbd207f261ed969c65de439f6bc9e5dbd3b3b9a77f25d95f343", size = 1803014, upload-time = "2025-10-25T00:55:41.394Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/3c/d717024885424591d5376220b5e836c2d5293ce2011523c9de23ff7bf068/pip-25.3-py3-none-any.whl", hash = "sha256:9655943313a94722b7774661c21049070f6bbb0a1516bf02f7c8d5d9201514cd", size = 1778622, upload-time = "2025-10-25T00:55:39.247Z" },
+]
+
+[[package]]
 name = "platformdirs"
 version = "4.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1512,6 +1557,29 @@ wheels = [
 [package.optional-dependencies]
 crypto = [
     { name = "cryptography" },
+]
+
+[[package]]
+name = "pypiserver"
+version = "2.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "importlib-resources", marker = "python_full_version < '3.12'" },
+    { name = "packaging" },
+    { name = "pip" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/90/09/2b6400c798d2f3f3ba4e9c906af4e6c4f3301a8d9db284d7bb74da12108f/pypiserver-2.4.0.tar.gz", hash = "sha256:0dc0e8300c12c855253b36b34beebfc28305c2c9e39151540a2886b641d4b456", size = 189921, upload-time = "2025-08-18T12:36:54.091Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c3/e2/971349a38e835c9fe5954c6da6b4e5f506eb01c5affdc3dcc14cfdc45459/pypiserver-2.4.0-py2.py3-none-any.whl", hash = "sha256:43700f711ce092e148e2bb6e7be22a684af090344bf5c166f8ec14eb7bba24bc", size = 94603, upload-time = "2025-08-18T12:36:53.007Z" },
+]
+
+[[package]]
+name = "pyproject-hooks"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e7/82/28175b2414effca1cdac8dc99f76d660e7a4fb0ceefa4b4ab8f5f6742925/pyproject_hooks-1.2.0.tar.gz", hash = "sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8", size = 19228, upload-time = "2024-09-29T09:24:13.293Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/24/12818598c362d7f300f18e74db45963dbcb85150324092410c8b49405e42/pyproject_hooks-1.2.0-py3-none-any.whl", hash = "sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913", size = 10216, upload-time = "2024-09-29T09:24:11.978Z" },
 ]
 
 [[package]]
