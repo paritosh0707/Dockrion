@@ -13,7 +13,7 @@ import os
 import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 from urllib.error import URLError
 from urllib.request import urlopen
 
@@ -46,6 +46,27 @@ try:
     JWT_AVAILABLE = True
 except ImportError:
     JWT_AVAILABLE = False
+    # For type checking only
+    if TYPE_CHECKING:
+        import jwt  # type: ignore[import-untyped]
+        from jwt import PyJWKClient, PyJWKClientError  # type: ignore[import-untyped]
+        from jwt.exceptions import (  # type: ignore[import-untyped]
+            DecodeError,
+            ExpiredSignatureError,
+            InvalidAudienceError,
+            InvalidIssuerError,
+            InvalidTokenError,
+        )
+    else:
+        # Create dummy types for runtime when JWT is not available
+        PyJWKClient = None  # type: ignore[assignment]
+        PyJWKClientError = Exception  # type: ignore[assignment]
+        DecodeError = Exception  # type: ignore[assignment]
+        ExpiredSignatureError = Exception  # type: ignore[assignment]
+        InvalidAudienceError = Exception  # type: ignore[assignment]
+        InvalidIssuerError = Exception  # type: ignore[assignment]
+        InvalidTokenError = Exception  # type: ignore[assignment]
+        jwt = None  # type: ignore[assignment]
     logger.warning(
         "PyJWT not installed. JWT authentication will not be available. "
         "Install with: pip install PyJWT[crypto]"
