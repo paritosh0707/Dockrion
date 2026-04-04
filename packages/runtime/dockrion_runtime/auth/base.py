@@ -73,10 +73,12 @@ class AuthConfig:
             api_key_env_var = api_keys_config.get("env_var", "DOCKRION_API_KEY")
             api_key_header = api_keys_config.get("header", "X-API-Key")
             api_key_prefix = api_keys_config.get("prefix")
+            allow_bearer = api_keys_config.get("allow_bearer", True)
         else:
             api_key_env_var = "DOCKRION_API_KEY"
             api_key_header = "X-API-Key"
             api_key_prefix = None
+            allow_bearer = True
 
         # Extract JWT config
         jwt_config = config.get("jwt", {})
@@ -120,6 +122,7 @@ class AuthConfig:
             api_key_env_var=api_key_env_var,
             api_key_header=api_key_header,
             api_key_prefix=api_key_prefix,
+            allow_bearer=allow_bearer,
             jwt_jwks_url=jwt_jwks_url,
             jwt_public_key_env=jwt_public_key_env,
             jwt_issuer=jwt_issuer,
