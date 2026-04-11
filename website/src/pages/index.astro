@@ -1,0 +1,136 @@
+---
+/**
+ * Custom landing page for Dockrion docs.
+ * Matches Stitch Screen 1: Hero + Features + CTA.
+ * This page lives outside Starlight's docs collection so it gets
+ * a clean, full-width layout without the sidebar/TOC chrome.
+ */
+---
+
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dockrion — Deploy AI Agents as APIs</title>
+    <meta
+      name="description"
+      content="Dockrion turns your AI agent into a production-ready HTTP API with authentication, streaming, policies, and observability — all from a single Dockfile."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+    <link rel="stylesheet" href="/landing.css" />
+  </head>
+
+  <body>
+    <!-- Navigation -->
+    <nav class="nav">
+      <a href="/" class="nav-brand">
+        <img src="/favicon.svg" alt="Dockrion" />
+        <span>Dockrion</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/introduction/">Docs</a></li>
+        <li><a href="/introduction/quickstart/">Quickstart</a></li>
+        <li><a href="/the-generated-api/endpoints-reference/">API</a></li>
+        <li><a href="/guides-and-recipes/">Guides</a></li>
+        <li>
+          <a href="https://github.com/paritosh0707/Dockrion" target="_blank" class="gh-link">GitHub</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+      <h1>Deploy AI Agents as APIs.<br/>In Minutes.</h1>
+      <p>
+        Dockrion turns your AI agent into a production-ready HTTP API with
+        authentication, streaming, policies, and observability &mdash; all from a
+        single Dockfile.
+      </p>
+      <div class="hero-btns">
+        <a href="/introduction/quickstart/" class="btn-primary">Get Started</a>
+        <a href="https://github.com/paritosh0707/Dockrion" target="_blank" class="btn-secondary">View on GitHub</a>
+      </div>
+
+      <!-- Code Showcase -->
+      <div class="code-box">
+        <div class="code-header">
+          <span class="code-dot code-dot-r"></span>
+          <span class="code-dot code-dot-y"></span>
+          <span class="code-dot code-dot-g"></span>
+          <span class="code-filename">Dockfile.yaml</span>
+        </div>
+        <div class="code-body">
+          <pre set:html={`<span class="ck">agent</span>:
+  <span class="ck">name</span>: <span class="cv">invoice-copilot</span>
+  <span class="ck">handler</span>: <span class="cv">agent:handle</span>
+  <span class="ck">framework</span>: <span class="cv">langgraph</span>
+
+<span class="ck">io_schema</span>:
+  <span class="ck">request</span>:  <span class="cc">{ type: object }</span>
+  <span class="ck">response</span>: <span class="cc">{ type: object }</span>
+
+<span class="ck">auth</span>:
+  <span class="ck">mode</span>: <span class="cv">api_key</span>
+
+<span class="ck">streaming</span>:
+  <span class="ck">expose</span>: <span class="cv">true</span>`} />
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section">
+      <h2 class="features-heading">The Complete Infrastructure for Agents</h2>
+      <p class="features-sub">Everything you need to go from prototype to production.</p>
+      <div class="features-grid">
+        <div class="fcard">
+          <span class="fcard-icon">&#128196;</span>
+          <div class="fcard-title">Dockfile-Driven</div>
+          <p class="fcard-desc">YAML-based declarative configuration. Define your entire agent lifecycle in one standard format.</p>
+        </div>
+        <div class="fcard">
+          <span class="fcard-icon">&#128274;</span>
+          <div class="fcard-title">Built-in Auth</div>
+          <p class="fcard-desc">Native support for API key, JWT, and OAuth2. Secure your endpoints without writing boilerplate logic.</p>
+        </div>
+        <div class="fcard">
+          <span class="fcard-icon">&#9889;</span>
+          <div class="fcard-title">Real-time Streaming</div>
+          <p class="fcard-desc">First-class SSE support and asynchronous execution patterns for long-running AI workflows.</p>
+        </div>
+        <div class="fcard">
+          <span class="fcard-icon">&#128737;</span>
+          <div class="fcard-title">Safety Policies</div>
+          <p class="fcard-desc">Control your agents with prompt injection guards, output filtering, and strict tool gating.</p>
+        </div>
+        <div class="fcard">
+          <span class="fcard-icon">&#128200;</span>
+          <div class="fcard-title">Observability</div>
+          <p class="fcard-desc">Deep integration with Langfuse. Full metrics, logs, and trace exports out of the box.</p>
+        </div>
+        <div class="fcard">
+          <span class="fcard-icon">&#128187;</span>
+          <div class="fcard-title">One Command Deploy</div>
+          <p class="fcard-desc">Docker build and multi-cloud deployment automation. Turn your local code into global scale.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+      <h2>Ready to scale your agents?</h2>
+      <p>Join developers building the next generation of AI-native infrastructure with Dockrion.</p>
+      <a href="/introduction/quickstart/" class="btn-primary">Get Started</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>
+        Built by <strong>Paritosh Sharma</strong> &amp; <strong>Prakhar Agarwal</strong> &middot;
+        <a href="https://github.com/paritosh0707/Dockrion">GitHub</a> &middot;
+        Apache 2.0
+      </p>
+    </footer>
+  </body>
+</html>

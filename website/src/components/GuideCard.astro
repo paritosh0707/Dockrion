@@ -1,0 +1,29 @@
+---
+interface Props {
+  href: string;
+  icon: string;
+  title: string;
+  description: string;
+  difficulty?: 'Beginner' | 'Intermediate' | 'Advanced';
+  time?: string;
+  featured?: boolean;
+}
+
+const { href, icon, title, description, difficulty, time, featured = false } = Astro.props;
+
+const badgeClass = difficulty
+  ? `doc-badge doc-badge-${difficulty.toLowerCase()}`
+  : '';
+---
+
+<a href={href} class:list={['guide-card', { 'guide-card-featured': featured }]}>
+  <div class="guide-card-header">
+    <span class="guide-card-icon">{icon}</span>
+    <span class="guide-card-title">{title}</span>
+  </div>
+  <p class="guide-card-desc">{description}</p>
+  <div class="guide-card-meta">
+    {difficulty && <span class={badgeClass}>{difficulty}</span>}
+    {time && <span class="guide-card-time">{time}</span>}
+  </div>
+</a>

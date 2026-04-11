@@ -1,0 +1,994 @@
+/* ============================================================
+   Dockrion Documentation — "The Neon Architect" Design System
+   Matches Stitch designs: dark void base, Electric Purple accents,
+   glassmorphism, tonal layering, Space Grotesk + Inter + JetBrains Mono
+   ============================================================ */
+
+/* --- Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ============================================================
+   1. DARK THEME — CSS Custom Properties
+   ============================================================ */
+:root {
+  /* Typography */
+  --sl-font: 'Inter', system-ui, sans-serif;
+  --sl-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --__sl-font-heading: 'Space Grotesk', var(--sl-font);
+
+  /* Content width */
+  --sl-content-width: 52rem;
+
+  /* Text sizes */
+  --sl-text-5xl: 3.5rem;
+  --sl-text-4xl: 2.5rem;
+  --sl-text-3xl: 1.75rem;
+  --sl-text-2xl: 1.375rem;
+  --sl-text-xl: 1.125rem;
+  --sl-text-lg: 1rem;
+  --sl-text-base: 0.9375rem;
+  --sl-text-sm: 0.875rem;
+  --sl-text-xs: 0.75rem;
+}
+
+/* Dark mode (default) — "The Void" */
+:root,
+[data-theme='dark'] {
+  --sl-color-accent-low: #1e1545;
+  --sl-color-accent: #6C5CE7;
+  --sl-color-accent-high: #C6BFFF;
+
+  --sl-color-white: #E3E0F4;
+  --sl-color-gray-1: #CDCADE;
+  --sl-color-gray-2: #9895A8;
+  --sl-color-gray-3: #6B687A;
+  --sl-color-gray-4: #474554;
+  --sl-color-gray-5: #292937;
+  --sl-color-gray-6: #1E1E2C;
+  --sl-color-black: #0D0D1A;
+
+  --sl-color-bg: #0D0D1A;
+  --sl-color-bg-nav: #12121F;
+  --sl-color-bg-sidebar: #12121F;
+
+  --sl-color-text: #E3E0F4;
+  --sl-color-text-accent: #C6BFFF;
+
+  /* Surface tiers for tonal layering */
+  --doc-surface-0: #12121F;
+  --doc-surface-1: #1A1A28;
+  --doc-surface-2: #1E1E2C;
+  --doc-surface-3: #292937;
+  --doc-surface-bright: #383847;
+
+  /* Brand */
+  --doc-primary: #C6BFFF;
+  --doc-primary-container: #6C5CE7;
+  --doc-on-surface: #E3E0F4;
+  --doc-outline-variant: #474554;
+}
+
+/* Light mode — provide a reasonable alternative */
+[data-theme='light'] {
+  --sl-color-accent-low: #ede8ff;
+  --sl-color-accent: #6C5CE7;
+  --sl-color-accent-high: #3b2daa;
+
+  --sl-color-white: #1a1a2e;
+  --sl-color-gray-1: #2c2c40;
+  --sl-color-gray-2: #555568;
+  --sl-color-gray-3: #8888a0;
+  --sl-color-gray-4: #c0c0d0;
+  --sl-color-gray-5: #e2e2ee;
+  --sl-color-gray-6: #f0f0f8;
+  --sl-color-black: #fafafe;
+
+  --doc-surface-0: #f5f5fb;
+  --doc-surface-1: #ededf6;
+  --doc-surface-2: #e6e6f0;
+  --doc-surface-3: #dddde9;
+  --doc-surface-bright: #ffffff;
+
+  --doc-primary: #6C5CE7;
+  --doc-primary-container: #ede8ff;
+  --doc-on-surface: #1a1a2e;
+  --doc-outline-variant: #d0d0de;
+}
+
+/* ============================================================
+   2. GLOBAL TYPOGRAPHY
+   ============================================================ */
+
+/* All headings: Space Grotesk */
+h1, h2, h3, h4, h5, h6,
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+.sl-markdown-content h4 {
+  font-family: 'Space Grotesk', var(--sl-font);
+  letter-spacing: -0.01em;
+}
+
+.sl-markdown-content h1 {
+  font-size: var(--sl-text-4xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sl-markdown-content h2 {
+  font-size: var(--sl-text-3xl);
+  font-weight: 600;
+  margin-top: 2.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(71, 69, 84, 0.2);
+}
+
+.sl-markdown-content h3 {
+  font-size: var(--sl-text-2xl);
+  font-weight: 600;
+}
+
+/* Subtle gradient on page title */
+[data-theme='dark'] .content-panel h1,
+[data-theme='dark'] main > .sl-markdown-content > h1:first-of-type {
+  background: linear-gradient(135deg, var(--doc-on-surface) 30%, var(--doc-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   3. HEADER / NAVIGATION BAR — Glassmorphism
+   ============================================================ */
+header.header {
+  background: rgba(18, 18, 31, 0.7) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(71, 69, 84, 0.2);
+}
+
+/* Accent line beneath header */
+header.header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--doc-primary-container), transparent);
+  opacity: 0.4;
+}
+
+/* Logo styling */
+.site-title {
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   4. LEFT SIDEBAR
+   ============================================================ */
+nav.sidebar {
+  background: var(--doc-surface-0);
+  border-right: 1px solid rgba(71, 69, 84, 0.15);
+}
+
+/* Sidebar group labels */
+.sidebar-content .top-level > li > details > summary,
+.sidebar-content .top-level > li > a {
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: var(--sl-text-xs);
+  color: var(--sl-color-gray-2);
+}
+
+/* Active sidebar item */
+[aria-current='page'],
+[aria-current='page']:hover {
+  color: var(--doc-primary) !important;
+  font-weight: 600;
+  background: rgba(108, 92, 231, 0.08);
+  border-radius: 6px;
+}
+
+/* Sidebar link hover */
+nav.sidebar a:hover {
+  color: var(--doc-primary);
+}
+
+/* ============================================================
+   5. RIGHT TABLE OF CONTENTS
+   ============================================================ */
+starlight-toc a {
+  transition: color 0.2s ease;
+}
+
+starlight-toc a[aria-current='true'] {
+  color: var(--doc-primary) !important;
+  font-weight: 500;
+}
+
+starlight-toc a:hover {
+  color: var(--doc-primary);
+}
+
+/* ============================================================
+   6. CODE BLOCKS — "The Technical Hearth"
+   ============================================================ */
+.expressive-code {
+  --ec-codeBg: var(--sl-color-black) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+/* Left accent border on code blocks */
+.expressive-code pre {
+  border-left: 2px solid var(--doc-primary) !important;
+  border-radius: 8px !important;
+}
+
+.expressive-code .frame {
+  border: 1px solid rgba(71, 69, 84, 0.2) !important;
+  border-radius: 8px !important;
+}
+
+/* Code font */
+.expressive-code code {
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-text-sm);
+}
+
+/* Inline code */
+.sl-markdown-content :not(pre) > code {
+  background: var(--doc-surface-2);
+  border: 1px solid rgba(71, 69, 84, 0.2);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  font-size: 0.875em;
+  color: var(--doc-primary);
+}
+
+/* ============================================================
+   7. TABLES
+   ============================================================ */
+.sl-markdown-content table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(71, 69, 84, 0.2);
+  width: 100%;
+}
+
+.sl-markdown-content th {
+  background: var(--doc-surface-2);
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-weight: 600;
+  font-size: var(--sl-text-sm);
+  letter-spacing: 0.02em;
+  text-align: left;
+  border-bottom: 1px solid rgba(71, 69, 84, 0.3);
+}
+
+.sl-markdown-content td {
+  border-bottom: 1px solid rgba(71, 69, 84, 0.1);
+}
+
+.sl-markdown-content tr:last-child td {
+  border-bottom: none;
+}
+
+.sl-markdown-content tr:hover td {
+  background: rgba(108, 92, 231, 0.04);
+}
+
+/* ============================================================
+   8. ADMONITIONS / CALLOUTS
+   ============================================================ */
+.starlight-aside {
+  border-radius: 8px;
+  border: none;
+  border-left: 3px solid;
+  background: var(--doc-surface-1);
+}
+
+.starlight-aside--note {
+  border-left-color: var(--doc-primary-container);
+}
+
+.starlight-aside--tip {
+  border-left-color: #10b981;
+}
+
+.starlight-aside--caution {
+  border-left-color: #f59e0b;
+}
+
+.starlight-aside--danger {
+  border-left-color: #ef4444;
+}
+
+.starlight-aside .starlight-aside__title {
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-weight: 600;
+}
+
+/* ============================================================
+   9. LINKS
+   ============================================================ */
+.sl-markdown-content a {
+  color: var(--doc-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.sl-markdown-content a:hover {
+  color: var(--doc-primary);
+  text-decoration: underline;
+  text-decoration-color: rgba(198, 191, 255, 0.4);
+  text-underline-offset: 3px;
+}
+
+/* ============================================================
+   10. PAGINATION (Previous / Next)
+   ============================================================ */
+.pagination-links a {
+  background: var(--doc-surface-1);
+  border: 1px solid rgba(71, 69, 84, 0.2);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.pagination-links a:hover {
+  background: var(--doc-surface-2);
+  border-color: var(--doc-primary-container);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   11. SEARCH
+   ============================================================ */
+button[data-open-modal] {
+  background: var(--doc-surface-1) !important;
+  border: 1px solid rgba(71, 69, 84, 0.2) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease;
+}
+
+button[data-open-modal]:hover {
+  border-color: var(--doc-primary-container) !important;
+  background: var(--doc-surface-2) !important;
+}
+
+/* ============================================================
+   12. CARDS (for custom components)
+   ============================================================ */
+.doc-card {
+  background: var(--doc-surface-1);
+  border: 1px solid rgba(71, 69, 84, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.doc-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--doc-primary), var(--doc-primary-container));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.doc-card:hover {
+  background: var(--doc-surface-2);
+  border-color: rgba(108, 92, 231, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+.doc-card:hover::before {
+  opacity: 1;
+}
+
+/* ============================================================
+   13. BUTTONS
+   ============================================================ */
+.doc-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--doc-primary), var(--doc-primary-container));
+  color: #0D0D1A;
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-weight: 600;
+  font-size: var(--sl-text-sm);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.doc-btn-primary:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(108, 92, 231, 0.35);
+  text-decoration: none;
+  color: #0D0D1A;
+}
+
+.doc-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: var(--doc-primary);
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-weight: 600;
+  font-size: var(--sl-text-sm);
+  border: 1px solid rgba(71, 69, 84, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.doc-btn-secondary:hover {
+  border-color: var(--doc-primary-container);
+  background: rgba(108, 92, 231, 0.08);
+  transform: translateY(-2px);
+  text-decoration: none;
+  color: var(--doc-primary);
+}
+
+/* ============================================================
+   14. BADGE COMPONENTS
+   ============================================================ */
+.doc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.doc-badge-beginner {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.doc-badge-intermediate {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.doc-badge-advanced {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* HTTP method badges */
+.doc-method {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: var(--sl-font-mono);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.doc-method-get {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.doc-method-post {
+  background: rgba(108, 92, 231, 0.15);
+  color: #C6BFFF;
+}
+
+.doc-method-delete {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* ============================================================
+   15. FEATURE GRID (Landing page)
+   ============================================================ */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 3rem 0;
+}
+
+.feature-card {
+  background: var(--doc-surface-1);
+  border: 1px solid rgba(71, 69, 84, 0.2);
+  border-radius: 8px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--doc-primary), var(--doc-primary-container));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card:hover {
+  background: var(--doc-surface-2);
+  border-color: rgba(108, 92, 231, 0.3);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+.feature-card-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.feature-card-title {
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-weight: 600;
+  font-size: var(--sl-text-lg);
+  color: var(--doc-on-surface);
+  margin-bottom: 0.5rem;
+}
+
+.feature-card-desc {
+  color: var(--sl-color-gray-2);
+  font-size: var(--sl-text-sm);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ============================================================
+   16. HERO SECTION (Landing page)
+   ============================================================ */
+.hero-section {
+  text-align: center;
+  padding: 6rem 2rem 4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    rgba(108, 92, 231, 0.08) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.hero-title {
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-size: 3.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, var(--doc-on-surface) 30%, var(--doc-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--sl-color-gray-2);
+  max-width: 600px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+
+/* ============================================================
+   17. CTA SECTION (Landing page footer)
+   ============================================================ */
+.cta-section {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--doc-surface-1);
+  border-radius: 16px;
+  margin: 4rem 0;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(71, 69, 84, 0.15);
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(
+    circle,
+    rgba(108, 92, 231, 0.06) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.cta-title {
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-size: var(--sl-text-3xl);
+  font-weight: 700;
+  color: var(--doc-on-surface);
+  margin-bottom: 1rem;
+}
+
+.cta-subtitle {
+  color: var(--sl-color-gray-2);
+  font-size: var(--sl-text-lg);
+  margin-bottom: 2rem;
+}
+
+/* ============================================================
+   18. GUIDE CARDS (Guides & Recipes hub)
+   ============================================================ */
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.guide-card {
+  background: var(--doc-surface-1);
+  border: 1px solid rgba(71, 69, 84, 0.2);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+.guide-card:hover {
+  background: var(--doc-surface-2);
+  border-color: rgba(108, 92, 231, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  text-decoration: none;
+}
+
+.guide-card-featured {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.08), rgba(108, 92, 231, 0.02));
+  border-color: rgba(108, 92, 231, 0.25);
+}
+
+.guide-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.guide-card-icon {
+  font-size: 1.5rem;
+}
+
+.guide-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.guide-card-time {
+  font-size: var(--sl-text-xs);
+  color: var(--sl-color-gray-3);
+}
+
+.guide-card-title {
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-weight: 600;
+  font-size: var(--sl-text-lg);
+  color: var(--doc-on-surface);
+}
+
+.guide-card-desc {
+  color: var(--sl-color-gray-2);
+  font-size: var(--sl-text-sm);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ============================================================
+   19. CODE SNIPPET SECTION (Landing page)
+   ============================================================ */
+.code-showcase {
+  max-width: 540px;
+  margin: 0 auto 3rem;
+  text-align: left;
+}
+
+.code-showcase-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--doc-surface-2);
+  padding: 0.6rem 1rem;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid rgba(71, 69, 84, 0.2);
+  border-bottom: none;
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-text-xs);
+  color: var(--sl-color-gray-2);
+}
+
+.code-showcase-body {
+  background: var(--sl-color-black);
+  border: 1px solid rgba(71, 69, 84, 0.2);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 1.25rem;
+  border-left: 2px solid var(--doc-primary);
+}
+
+.code-showcase-body pre {
+  margin: 0;
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-text-sm);
+  line-height: 1.7;
+  color: var(--doc-on-surface);
+  overflow-x: auto;
+}
+
+.code-showcase-body .code-key {
+  color: #C6BFFF;
+}
+
+.code-showcase-body .code-val {
+  color: #10b981;
+}
+
+.code-showcase-body .code-comment {
+  color: var(--sl-color-gray-3);
+}
+
+/* ============================================================
+   20. LANDING NAV
+   ============================================================ */
+.landing-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: rgba(18, 18, 31, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(71, 69, 84, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.landing-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--doc-on-surface);
+}
+
+.landing-nav-brand img {
+  height: 32px;
+  width: auto;
+}
+
+.landing-nav-brand span {
+  font-family: 'Space Grotesk', var(--sl-font);
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.landing-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.landing-nav-links a {
+  color: var(--sl-color-gray-2);
+  text-decoration: none;
+  font-size: var(--sl-text-sm);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.landing-nav-links a:hover {
+  color: var(--doc-primary);
+}
+
+/* ============================================================
+   21. FOOTER (Landing page)
+   ============================================================ */
+.landing-footer {
+  text-align: center;
+  padding: 2rem;
+  color: var(--sl-color-gray-3);
+  font-size: var(--sl-text-sm);
+  border-top: 1px solid rgba(71, 69, 84, 0.15);
+}
+
+.landing-footer a {
+  color: var(--doc-primary);
+  text-decoration: none;
+}
+
+.landing-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================
+   22. RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.25rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.05rem;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guide-card-featured {
+    grid-column: 1;
+  }
+
+  .landing-nav-links {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 3rem 1rem 2rem;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* ============================================================
+   23. MISC POLISH
+   ============================================================ */
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Content area animation */
+.sl-markdown-content {
+  animation: fadeInContent 0.3s ease-out;
+}
+
+@keyframes fadeInContent {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Horizontal rules: soft, not harsh */
+.sl-markdown-content hr {
+  border: none;
+  height: 1px;
+  background: rgba(71, 69, 84, 0.2);
+  margin: 2.5rem 0;
+}
+
+/* Lists */
+.sl-markdown-content ul,
+.sl-markdown-content ol {
+  line-height: 1.8;
+}
+
+/* Blockquotes */
+.sl-markdown-content blockquote {
+  border-left: 3px solid var(--doc-primary-container);
+  background: var(--doc-surface-1);
+  padding: 1rem 1.25rem;
+  border-radius: 0 8px 8px 0;
+  margin: 1.5rem 0;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(108, 92, 231, 0.3);
+  color: var(--doc-on-surface);
+}
+
+/* Scrollbar (Webkit) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--doc-surface-0);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--doc-surface-3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--doc-outline-variant);
+}

@@ -1,0 +1,15 @@
+---
+interface Props {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+const { icon, title, description } = Astro.props;
+---
+
+<div class="feature-card">
+  <span class="feature-card-icon">{icon}</span>
+  <div class="feature-card-title">{title}</div>
+  <p class="feature-card-desc">{description}</p>
+</div>

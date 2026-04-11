@@ -1,0 +1,23 @@
+---
+interface Props {
+  method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
+  path: string;
+  auth: boolean;
+  description: string;
+}
+
+const { method, path, auth, description } = Astro.props;
+
+const methodClass = `doc-method doc-method-${method.toLowerCase()}`;
+---
+
+<div class="doc-card" style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem;">
+  <span class={methodClass}>{method}</span>
+  <code style="font-family: var(--sl-font-mono); font-size: 0.9rem; color: var(--doc-on-surface);">{path}</code>
+  {auth && (
+    <span class="doc-badge" style="background: rgba(108,92,231,0.15); color: #C6BFFF; margin-left: auto;">Auth</span>
+  )}
+  {!auth && (
+    <span class="doc-badge" style="background: rgba(16,185,129,0.15); color: #10b981; margin-left: auto;">Public</span>
+  )}
+</div>
