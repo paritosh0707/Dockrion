@@ -1,0 +1,232 @@
+---
+/**
+ * Animated terminal demo showcasing the Dockrion CLI workflow.
+ * 5 steps: init → Dockfile preview → validate → run → build
+ * Loops seamlessly. Starts when scrolled into view.
+ */
+---
+
+<div class="terminal-demo" id="terminal-demo">
+  <div class="terminal-chrome">
+    <div class="terminal-dots">
+      <span class="td td-r"></span>
+      <span class="td td-y"></span>
+      <span class="td td-g"></span>
+    </div>
+    <span class="terminal-title" id="terminal-title">Terminal</span>
+  </div>
+  <div class="terminal-screen" id="terminal-screen"></div>
+  <div class="terminal-steps">
+    <span class="tstep active"></span>
+    <span class="tstep"></span>
+    <span class="tstep"></span>
+    <span class="tstep"></span>
+    <span class="tstep"></span>
+  </div>
+</div>
+
+<script>
+const TYPING_SPEED = 30;
+const LINE_DELAY = 100;
+const FADE_MS = 250;
+
+const demoEl = document.getElementById('terminal-demo');
+const screenEl = document.getElementById('terminal-screen');
+const titleEl = document.getElementById('terminal-title');
+const stepEls = document.querySelectorAll('.tstep');
+
+if (demoEl && screenEl && titleEl) {
+
+const STEPS = [
+  {
+    title: 'Terminal',
+    type: 'command',
+    cmd: 'dockrion init invoice-copilot --framework langgraph',
+    lines: [
+      '<span class="t-green">\u2713</span> <span class="t-muted">Created Dockfile.yaml</span>',
+      '<span class="t-green">\u2713</span> <span class="t-muted">Scaffolded project structure</span>',
+      '  <span class="t-muted">Agent:</span> <span class="t-lavender">invoice-copilot</span>',
+      '  <span class="t-muted">Framework:</span> <span class="t-lavender">langgraph</span>',
+    ],
+    pause: 1800,
+  },
+  {
+    title: 'Dockfile.yaml',
+    type: 'file',
+    fileHeader: '\u2500\u2500 Dockfile.yaml \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500',
+    fileLines: [
+      '<span class="t-key">version</span><span class="t-punct">:</span> <span class="t-val">"1.0"</span>',
+      '',
+      '<span class="t-key">agent</span><span class="t-punct">:</span>',
+      '  <span class="t-key">name</span><span class="t-punct">:</span> <span class="t-val">invoice-copilot</span>',
+      '  <span class="t-key">entrypoint</span><span class="t-punct">:</span> <span class="t-val">app.graph:create_graph</span>',
+      '  <span class="t-key">framework</span><span class="t-punct">:</span> <span class="t-val">langgraph</span>',
+      '',
+      '<span class="t-key">auth</span><span class="t-punct">:</span>',
+      '  <span class="t-key">mode</span><span class="t-punct">:</span> <span class="t-val">api_key</span>',
+      '',
+      '<span class="t-key">expose</span><span class="t-punct">:</span>',
+      '  <span class="t-key">rest</span><span class="t-punct">:</span> <span class="t-val">true</span>',
+      '  <span class="t-key">streaming</span><span class="t-punct">:</span> <span class="t-val">sse</span>',
+    ],
+    pause: 3000,
+  },
+  {
+    title: 'Terminal',
+    type: 'command',
+    cmd: 'dockrion validate',
+    lines: [
+      '<span class="t-green">\u2713</span> <span class="t-muted">Dockfile is valid</span>',
+      '  <span class="t-muted">Agent:</span> <span class="t-lavender">invoice-copilot</span>',
+      '  <span class="t-muted">Mode:</span> <span class="t-lavender">entrypoint (app.graph:create_graph)</span>',
+      '  <span class="t-muted">Framework:</span> <span class="t-lavender">langgraph</span>',
+    ],
+    pause: 1500,
+  },
+  {
+    title: 'Terminal',
+    type: 'command',
+    cmd: 'dockrion run',
+    lines: [
+      '<span class="t-muted">Starting development server...</span>',
+      '',
+      '  <span class="t-lavender t-bold">POST</span>  <span class="t-white">/invoke</span>          <span class="t-punct">\u2190</span> <span class="t-punct">agent invocation</span>',
+      '  <span class="t-lavender t-bold">POST</span>  <span class="t-white">/invoke/stream</span>   <span class="t-punct">\u2190</span> <span class="t-punct">SSE streaming</span>',
+      '  <span class="t-lavender t-bold">GET</span>   <span class="t-white">/health</span>          <span class="t-punct">\u2190</span> <span class="t-punct">health check</span>',
+      '  <span class="t-lavender t-bold">GET</span>   <span class="t-white">/docs</span>            <span class="t-punct">\u2190</span> <span class="t-punct">Swagger UI</span>',
+      '',
+      '<span class="t-green">\u2713</span> <span class="t-muted">Server ready at</span> <span class="t-lavender t-glow">http://localhost:8080</span>',
+    ],
+    pause: 2000,
+  },
+  {
+    title: 'Terminal',
+    type: 'command',
+    cmd: 'dockrion build --tag v1.0.0',
+    lines: [
+      '<span class="t-muted">Building Docker image...</span>',
+      '<span class="t-green">\u2713</span> <span class="t-muted">Runtime generated</span>',
+      '<span class="t-green">\u2713</span> <span class="t-muted">Dockerfile created</span>',
+      '<span class="t-green">\u2713</span> <span class="t-muted">Image built successfully</span>',
+      '',
+      '  <span class="t-muted">Image:</span> <span class="t-lavender">dockrion/invoice-copilot:v1.0.0</span>',
+    ],
+    pause: 2000,
+  },
+];
+
+function sleep(ms) {
+  return new Promise(function(r) { setTimeout(r, ms); });
+}
+
+async function typeCommand(text) {
+  var lineDiv = document.createElement('div');
+  lineDiv.className = 'tl';
+
+  var prompt = document.createElement('span');
+  prompt.className = 't-prompt';
+  prompt.textContent = '$ ';
+
+  var cmd = document.createElement('span');
+  cmd.className = 't-cmd';
+
+  lineDiv.appendChild(prompt);
+  lineDiv.appendChild(cmd);
+  screenEl.appendChild(lineDiv);
+
+  for (var i = 0; i < text.length; i++) {
+    cmd.textContent += text[i];
+    await sleep(TYPING_SPEED);
+  }
+  await sleep(200);
+}
+
+async function showLines(lines) {
+  for (var j = 0; j < lines.length; j++) {
+    var div = document.createElement('div');
+    div.className = 'tl tl-out';
+    div.innerHTML = lines[j] || '\u00A0';
+    div.style.opacity = '0';
+    screenEl.appendChild(div);
+    await sleep(30);
+    div.style.opacity = '1';
+    await sleep(LINE_DELAY);
+  }
+}
+
+async function showFile(header, fileLines) {
+  var headerDiv = document.createElement('div');
+  headerDiv.className = 'tl t-file-header';
+  headerDiv.textContent = header;
+  headerDiv.style.opacity = '0';
+  screenEl.appendChild(headerDiv);
+
+  var blockDiv = document.createElement('div');
+  blockDiv.className = 't-file-block';
+  blockDiv.style.opacity = '0';
+  screenEl.appendChild(blockDiv);
+
+  for (var k = 0; k < fileLines.length; k++) {
+    var div = document.createElement('div');
+    div.className = 'tl';
+    div.innerHTML = fileLines[k] || '\u00A0';
+    blockDiv.appendChild(div);
+  }
+
+  await sleep(100);
+  headerDiv.style.opacity = '1';
+  await sleep(200);
+  blockDiv.style.opacity = '1';
+}
+
+async function fadeOut() {
+  screenEl.style.opacity = '0';
+  await sleep(FADE_MS);
+  screenEl.innerHTML = '';
+  screenEl.style.opacity = '1';
+}
+
+function setActiveStep(index) {
+  for (var s = 0; s < stepEls.length; s++) {
+    if (s === index) {
+      stepEls[s].classList.add('active');
+    } else {
+      stepEls[s].classList.remove('active');
+    }
+  }
+}
+
+async function runStep(step, index) {
+  setActiveStep(index);
+  titleEl.textContent = step.title;
+
+  if (step.type === 'command') {
+    await typeCommand(step.cmd);
+    await showLines(step.lines);
+  } else if (step.type === 'file') {
+    await showFile(step.fileHeader, step.fileLines);
+  }
+
+  await sleep(step.pause);
+  await fadeOut();
+}
+
+async function loop() {
+  while (true) {
+    for (var i = 0; i < STEPS.length; i++) {
+      await runStep(STEPS[i], i);
+    }
+  }
+}
+
+var observer = new IntersectionObserver(function(entries) {
+  if (entries[0].isIntersecting) {
+    observer.disconnect();
+    loop();
+  }
+}, { threshold: 0.2 });
+
+observer.observe(demoEl);
+
+}
+</script>

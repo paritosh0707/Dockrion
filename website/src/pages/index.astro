@@ -1,10 +1,5 @@
 ---
-/**
- * Custom landing page for Dockrion docs.
- * Matches Stitch Screen 1: Hero + Features + CTA.
- * This page lives outside Starlight's docs collection so it gets
- * a clean, full-width layout without the sidebar/TOC chrome.
- */
+import TerminalDemo from '../components/TerminalDemo.astro';
 ---
 
 <html lang="en" data-theme="dark">
@@ -52,31 +47,8 @@
         <a href="https://github.com/paritosh0707/Dockrion" target="_blank" class="btn-secondary">View on GitHub</a>
       </div>
 
-      <!-- Code Showcase -->
-      <div class="code-box">
-        <div class="code-header">
-          <span class="code-dot code-dot-r"></span>
-          <span class="code-dot code-dot-y"></span>
-          <span class="code-dot code-dot-g"></span>
-          <span class="code-filename">Dockfile.yaml</span>
-        </div>
-        <div class="code-body">
-          <pre set:html={`<span class="ck">agent</span>:
-  <span class="ck">name</span>: <span class="cv">invoice-copilot</span>
-  <span class="ck">handler</span>: <span class="cv">agent:handle</span>
-  <span class="ck">framework</span>: <span class="cv">langgraph</span>
-
-<span class="ck">io_schema</span>:
-  <span class="ck">request</span>:  <span class="cc">{ type: object }</span>
-  <span class="ck">response</span>: <span class="cc">{ type: object }</span>
-
-<span class="ck">auth</span>:
-  <span class="ck">mode</span>: <span class="cv">api_key</span>
-
-<span class="ck">streaming</span>:
-  <span class="ck">expose</span>: <span class="cv">true</span>`} />
-        </div>
-      </div>
+      <!-- Animated Terminal Demo -->
+      <TerminalDemo />
     </section>
 
     <!-- Features -->
