@@ -64,8 +64,9 @@ def clean_packages():
 def build():
     """Build the package."""
     print("🔨 Building package...")
+    dist_dir = PACKAGE_DIR / "dist"
     result = subprocess.run(
-        ["uv", "build"],
+        ["uv", "build", "--out-dir", str(dist_dir)],
         cwd=PACKAGE_DIR,
         capture_output=False,
     )
@@ -86,7 +87,7 @@ def main():
 
         if result == 0:
             print("\n✅ Build successful!")
-            print(f"   Packages are in: {PACKAGE_DIR.parent.parent / 'dist'}")
+            print(f"   Packages are in: {PACKAGE_DIR / 'dist'}")
         else:
             print("\n❌ Build failed!")
 
