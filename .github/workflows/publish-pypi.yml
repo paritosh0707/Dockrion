@@ -179,9 +179,9 @@ jobs:
       - name: List artifacts
         run: ls -la dist/
 
-      # Publish with API Token (for first publish or if trusted publisher not configured)
+      # Publish with API Token (for releases or if explicitly requested)
       - name: Publish to PyPI (Token)
-        if: github.event.inputs.use_token == 'true'
+        if: github.event_name == 'release' || github.event.inputs.use_token == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
@@ -189,9 +189,9 @@ jobs:
           skip-existing: true
           verbose: true
 
-      # Publish with Trusted Publisher (preferred method)
+      # Publish with Trusted Publisher (only for workflow_dispatch with use_token=false)
       - name: Publish to PyPI (Trusted)
-        if: github.event.inputs.use_token != 'true'
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.use_token != 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
