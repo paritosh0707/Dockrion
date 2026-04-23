@@ -219,3 +219,6 @@ __marimo__/
 **/.DS_Store
 
 .cursor/
+
+# Internal planning docs
+section plan.md

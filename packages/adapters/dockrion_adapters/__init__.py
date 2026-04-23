@@ -75,7 +75,7 @@ from .registry import (
 )
 from .serialization import deep_serialize, serialize_for_json
 
-__version__ = "0.1.0"
+__version__ = "0.0.2"
 
 __all__ = [
     # Protocol

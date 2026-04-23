@@ -110,6 +110,7 @@ The `dockrion` package bundles everything you need:
 | `dockrion_runtime` | FastAPI server for deployed agents |
 | `dockrion_schema` | Dockfile YAML schema validation |
 | `dockrion_adapters` | Framework adapters (LangGraph, LangChain) |
+| `dockrion_events` | Streaming and event infrastructure for agent executions |
 | `dockrion_policy` | Policy engine for redaction & tool gating |
 | `dockrion_telemetry` | Prometheus metrics & structured logging |
 | `dockrion_common` | Shared utilities and error handling |

@@ -71,6 +71,7 @@ jobs:
               'dockrion_common/',
               'dockrion_schema/',
               'dockrion_adapters/',
+              'dockrion_events/',
               'dockrion_policy/',
               'dockrion_telemetry/',
               'dockrion_runtime/',

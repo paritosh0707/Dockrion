@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from dockrion_common.constants import DOCKRION_VERSION
 from dockrion_common.errors import BuildConflictError, DockrionError
 from dockrion_common.logger import get_logger
 from dockrion_schema import DockSpec
@@ -41,7 +42,6 @@ logger = get_logger(__name__)
 # Constants
 # ============================================================================
 
-DOCKRION_VERSION = "1.0.0"
 
 # Default template directories (searched in order)
 DEFAULT_TEMPLATE_DIRS = [
