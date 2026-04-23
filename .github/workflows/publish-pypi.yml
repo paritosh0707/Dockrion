@@ -160,14 +160,9 @@ jobs:
   # Step 2: Publish to PyPI (after TestPyPI succeeds, or directly if skipped)
   publish-pypi:
     name: Publish to PyPI
-    needs: [build, publish-testpypi]
-    # Run if:
-    # - Not a dry run AND
-    # - Either testpypi succeeded OR testpypi was skipped
-    if: |
-      always() &&
-      github.event.inputs.dry_run != 'true' &&
-      (needs.publish-testpypi.result == 'success' || needs.publish-testpypi.result == 'skipped')
+    needs: build
+    # Run if not a dry run
+    if: github.event.inputs.dry_run != 'true'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
