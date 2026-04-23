@@ -108,54 +108,54 @@ jobs:
           path: packages/dockrion/dist/
 
   # Step 1: Publish to TestPyPI first (when not skipped)
-  publish-testpypi:
-    name: Publish to TestPyPI
-    needs: build
-    if: |
-      github.event.inputs.dry_run != 'true' && 
-      github.event.inputs.skip_testpypi != 'true'
-    runs-on: ubuntu-latest
-    environment: testpypi
-    permissions:
-      id-token: write
-      contents: read
+  # publish-testpypi:
+  #   name: Publish to TestPyPI
+  #   needs: build
+  #   if: |
+  #     github.event.inputs.dry_run != 'true' && 
+  #     github.event.inputs.skip_testpypi != 'true'
+  #   runs-on: ubuntu-latest
+  #   environment: testpypi
+  #   permissions:
+  #     id-token: write
+  #     contents: read
 
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist-dockrion
-          path: dist/
+  #   steps:
+  #     - name: Download artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: dist-dockrion
+  #         path: dist/
 
-      - name: List artifacts
-        run: ls -la dist/
+  #     - name: List artifacts
+  #       run: ls -la dist/
 
-      # Publish with API Token
-      - name: Publish to TestPyPI (Token)
-        if: github.event.inputs.use_token == 'true'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist/
-          repository-url: https://test.pypi.org/legacy/
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          skip-existing: true
-          verbose: true
+  #     # Publish with API Token
+  #     - name: Publish to TestPyPI (Token)
+  #       if: github.event.inputs.use_token == 'true'
+  #       uses: pypa/gh-action-pypi-publish@release/v1
+  #       with:
+  #         packages-dir: dist/
+  #         repository-url: https://test.pypi.org/legacy/
+  #         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+  #         skip-existing: true
+  #         verbose: true
 
-      # Publish with Trusted Publisher
-      - name: Publish to TestPyPI (Trusted)
-        if: github.event.inputs.use_token != 'true'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist/
-          repository-url: https://test.pypi.org/legacy/
-          skip-existing: true
-          verbose: true
+  #     # Publish with Trusted Publisher
+  #     - name: Publish to TestPyPI (Trusted)
+  #       if: github.event.inputs.use_token != 'true'
+  #       uses: pypa/gh-action-pypi-publish@release/v1
+  #       with:
+  #         packages-dir: dist/
+  #         repository-url: https://test.pypi.org/legacy/
+  #         skip-existing: true
+  #         verbose: true
 
-      - name: Test install from TestPyPI
-        run: |
-          pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dockrion
-          dockrion --help
-          echo "✓ Package installs correctly from TestPyPI"
+  #     - name: Test install from TestPyPI
+  #       run: |
+  #         pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ dockrion
+  #         dockrion --help
+  #         echo "✓ Package installs correctly from TestPyPI"
 
   # Step 2: Publish to PyPI (after TestPyPI succeeds, or directly if skipped)
   publish-pypi:
